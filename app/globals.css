@@ -1,0 +1,216 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color palette with sophisticated yellow and blue theme */
+  --background: #ffffff;
+  --foreground: #374151;
+  --card: #fefce8;
+  --card-foreground: #374151;
+  --popover: #fefce8;
+  --popover-foreground: #374151;
+  /* Changed primary from #d97706 to lighter yellow #fbbf24 */
+  --primary: #fbbf24;
+  --primary-foreground: #0f172a;
+  /* Changed secondary from #3b82f6 to much darker navy blue #0f172a */
+  --secondary: #0f172a;
+  --secondary-foreground: #ffffff;
+  --muted: #fefce8;
+  --muted-foreground: #374151;
+  --accent: #f59e0b;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #f1f5f9;
+  --ring: rgba(255, 255, 255, 0.5);
+  --chart-1: #fbbf24;
+  --chart-2: #facc15;
+  --chart-3: #fde68a;
+  --chart-4: #bbf7d0;
+  --chart-5: #86efac;
+  --radius: 0.5rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #374151;
+  /* Updated sidebar primary to much darker navy blue #0f172a */
+  --sidebar-primary: #0f172a;
+  --sidebar-primary-foreground: #ffffff;
+  /* Updated sidebar accent to lighter yellow #fbbf24 */
+  --sidebar-accent: #fbbf24;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e5e7eb;
+  /* Updated sidebar ring to use much darker navy blue */
+  --sidebar-ring: rgba(15, 23, 42, 0.5);
+
+  /* Added specific colors for navbar and footer - lighter blue */
+  --navbar-bg: #1e3a8a;
+  --navbar-foreground: #ffffff;
+  --footer-bg: #1e3a8a;
+  --footer-foreground: #ffffff;
+}
+
+.dark {
+  /* Updated dark mode colors with sophisticated palette */
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #fbbf24;
+  --primary-foreground: #0f172a;
+  /* Updated dark mode secondary to much darker navy blue #0f172a */
+  --secondary: #0f172a;
+  --secondary-foreground: #ffffff;
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  --accent: #f59e0b;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: rgba(251, 191, 36, 0.5);
+  --chart-1: #fbbf24;
+  --chart-2: #facc15;
+  --chart-3: #fde68a;
+  --chart-4: #bbf7d0;
+  --chart-5: #86efac;
+  --radius: 0.5rem;
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f8fafc;
+  /* Updated dark mode sidebar primary to much darker navy blue #0f172a */
+  --sidebar-primary: #0f172a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fbbf24;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #334155;
+  /* Updated dark mode sidebar ring to use much darker navy blue */
+  --sidebar-ring: rgba(15, 23, 42, 0.5);
+
+  /* Added dark mode colors for navbar and footer - lighter blue */
+  --navbar-bg: #1e3a8a;
+  --navbar-foreground: #ffffff;
+  --footer-bg: #1e3a8a;
+  --footer-foreground: #ffffff;
+}
+
+/* Added custom animations and unique visual effects */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    /* Updated pulse glow to use lighter yellow #fbbf24 */
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    /* Updated pulse glow to use lighter yellow #fbbf24 */
+    box-shadow: 0 0 40px rgba(251, 191, 36, 0.6);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Added unique gradient backgrounds */
+.gradient-hero {
+  /* Updated gradient to use much darker navy blue #0f172a */
+  background: linear-gradient(135deg, #0f172a 0%, #0f172a 25%, #fbbf24 75%, #f59e0b 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(145deg, #fefce8 0%, #ffffff 100%);
+}
+
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Added navbar and footer color tokens */
+  --color-navbar-bg: var(--navbar-bg);
+  --color-navbar-foreground: var(--navbar-foreground);
+  --color-footer-bg: var(--footer-bg);
+  --color-footer-foreground: var(--footer-foreground);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
