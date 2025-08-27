@@ -6,9 +6,8 @@ import { AuthProvider } from "@/contexts/auth-context"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "ImóvelPro - Plataforma Imobiliária",
-  description: "Encontre o imóvel dos seus sonhos com a ImóvelPro",
-  generator: "v0.app",
+  title: "GR Imóveis - Plataforma Imobiliária",
+  description: "Encontre o imóvel dos seus sonhos com a GR Imóveis"
 }
 
 export default function RootLayout({

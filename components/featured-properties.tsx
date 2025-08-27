@@ -46,7 +46,7 @@ const featuredProperties = [
 
 export function FeaturedProperties() {
   return (
-    <section className="py-20 bg-gradient-to-br from-muted/30 via-background to-muted/20">
+    <section className="py-20 bg-slate-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
@@ -66,10 +66,8 @@ export function FeaturedProperties() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {featuredProperties.map((property, index) => (
             <Card
-              key={property.id}
-              className={`overflow-hidden hover:shadow-2xl transition-all duration-500 group gradient-card border-0 ${
-                index === 0 ? "lg:col-span-2 lg:row-span-1" : ""
-              }`}
+              key={property.id}             
+              className={`overflow-hidden transition-all duration-300 group bg-card border hover:shadow-xl hover:-translate-y-2 ${index === 0 ? "lg:col-span-2" : ""}`}
             >
               <div className="relative overflow-hidden">
                 <img
@@ -84,7 +82,7 @@ export function FeaturedProperties() {
                 <div className="absolute top-4 left-4">
                   <Badge
                     variant={property.type === "À Venda" ? "default" : "secondary"}
-                    className={`${property.type === "À Venda" ? "bg-primary" : "bg-accent"} text-white shadow-lg`}
+                    className={`${property.type === "À Venda" ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground"} shadow-lg`}
                   >
                     {property.type}
                   </Badge>
@@ -92,43 +90,42 @@ export function FeaturedProperties() {
 
                 {property.featured && (
                   <div className="absolute bottom-4 left-4">
-                    <Badge className="bg-accent text-white shadow-lg">
+                    <Badge className="bg-secondary text-secondary-foreground shadow-lg">
                       <Star className="h-3 w-3 mr-1" />
                       Destaque
                     </Badge>
                   </div>
                 )}
               </div>
-
-              <CardContent className="p-8">
-                <h3 className="text-2xl font-bold mb-3 text-secondary group-hover:text-primary transition-colors duration-300">
+              
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-2 text-secondary group-hover:text-primary transition-colors duration-300">
                   {property.title}
                 </h3>
 
-                <div className="flex items-center text-muted-foreground mb-6">
-                  <MapPin className="h-5 w-5 mr-2 text-primary" />
-                  <span className="text-base">{property.location}</span>
+                <div className="flex items-center text-muted-foreground mb-4 text-sm">
+                  <MapPin className="h-4 w-4 mr-2 text-primary" />
+                  <span>{property.location}</span>
                 </div>
 
-                <div className="flex items-center justify-between mb-6 text-muted-foreground">
-                  <div className="flex items-center bg-muted/50 px-3 py-2 rounded-lg">
+                <div className="flex items-center justify-around mb-4 text-muted-foreground border-t border-b py-3">
+                  <div className="flex items-center gap-2 text-sm">
                     <Bed className="h-4 w-4 mr-2" />
                     <span className="font-medium">{property.bedrooms}</span>
                   </div>
-                  <div className="flex items-center bg-muted/50 px-3 py-2 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm">
                     <Bath className="h-4 w-4 mr-2" />
                     <span className="font-medium">{property.bathrooms}</span>
                   </div>
-                  <div className="flex items-center bg-muted/50 px-3 py-2 rounded-lg">
+                  <div className="flex items-center gap-2 text-sm">
                     <Square className="h-4 w-4 mr-2" />
                     <span className="font-medium">{property.area}m²</span>
                   </div>
                 </div>
-
-                <div className="text-3xl font-bold text-primary mb-6">{property.price}</div>
+                <div className="text-2xl font-bold text-primary">{property.price}</div>
               </CardContent>
 
-              <CardFooter className="p-8 pt-0">
+              <CardFooter className="p-6 pt-0">
                 <Button
                   asChild
                   className="w-full h-12 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
@@ -144,7 +141,7 @@ export function FeaturedProperties() {
           <Button
             asChild
             variant="outline"
-            size="lg"
+            size="lg"           
             className="text-lg px-10 py-4 h-auto rounded-xl border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300 bg-transparent"
           >
             <Link href="/imoveis">Explorar Todos os Imóveis</Link>

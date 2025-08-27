@@ -32,7 +32,7 @@ export function HeroSection() {
 
           <h1 className="text-5xl md:text-7xl font-bold mb-8 text-balance leading-tight">
             Encontre o Imóvel dos Seus{" "}
-            <span className="bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent animate-shimmer">
+            <span className="bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">
               Sonhos
             </span>
           </h1>

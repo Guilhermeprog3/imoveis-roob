@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -11,29 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Phone, Mail, MapPin, Clock, MessageSquare, Send, Award } from "lucide-react"
 import { NotificationToast } from "@/components/notification-toast"
-
-const corretores = [
-  {
-    id: "genilson",
-    nome: "Genilson Silva Rios",
-    creci: "CRECI-SP 123.456-F",
-    telefone: "(11) 99999-8888",
-    email: "genilson@imovelpro.com",
-    especialidade: "Imóveis Residenciais e Comerciais",
-    experiencia: "15 anos de experiência",
-    foto: "/professional-male-realtor-portrait.png",
-  },
-  {
-    id: "gennyce",
-    nome: "Gennyce Silva Rios",
-    creci: "CRECI-SP 789.012-F",
-    telefone: "(11) 99999-7777",
-    email: "gennyce@imovelpro.com",
-    especialidade: "Imóveis de Luxo e Investimentos",
-    experiencia: "12 anos de experiência",
-    foto: "/professional-female-realtor-portrait.png",
-  },
-]
+import { brokers } from "@/lib/data" // Importando os dados dos corretores
 
 export default function ContatoPage() {
   const [formData, setFormData] = useState({
@@ -43,7 +20,7 @@ export default function ContatoPage() {
     subject: "",
     message: "",
   })
-  const [corretorSelecionado, setCorretorSelecionado] = useState(corretores[0])
+  const [selectedBroker, setSelectedBroker] = useState(brokers[0])
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -59,7 +36,7 @@ export default function ContatoPage() {
     // Simulate form submission
     setTimeout(() => {
       setNotification({
-        message: `Mensagem enviada com sucesso para ${corretorSelecionado.nome}! Entraremos em contato em breve.`,
+        message: `Mensagem enviada com sucesso para ${selectedBroker.name}! Entraremos em contato em breve.`,
         type: "success",
       })
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
@@ -68,8 +45,8 @@ export default function ContatoPage() {
   }
 
   const handleWhatsAppContact = () => {
-    const message = `Olá ${corretorSelecionado.nome}! Gostaria de mais informações sobre os imóveis disponíveis.`
-    const whatsappUrl = `https://wa.me/55${corretorSelecionado.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`
+    const message = `Olá ${selectedBroker.name}! Gostaria de mais informações sobre os imóveis disponíveis.`
+    const whatsappUrl = `https://wa.me/${selectedBroker.whatsapp}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
@@ -92,43 +69,43 @@ export default function ContatoPage() {
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-secondary mb-6 text-center">Escolha seu Corretor</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {corretores.map((corretor) => (
+            {brokers.map((broker) => (
               <Card
-                key={corretor.id}
+                key={broker.id}
                 className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
-                  corretorSelecionado.id === corretor.id
+                  selectedBroker.id === broker.id
                     ? "ring-2 ring-primary bg-primary/5 shadow-lg"
                     : "hover:shadow-md"
                 }`}
-                onClick={() => setCorretorSelecionado(corretor)}
+                onClick={() => setSelectedBroker(broker)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <img
-                      src={corretor.foto || "/placeholder.svg"}
-                      alt={corretor.nome}
+                      src={broker.photo || "/placeholder.svg"}
+                      alt={broker.name}
                       className="w-20 h-20 rounded-full object-cover border-2 border-primary/20"
                     />
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-secondary mb-1">{corretor.nome}</h3>
+                      <h3 className="text-lg font-bold text-secondary mb-1">{broker.name}</h3>
                       <div className="flex items-center gap-2 mb-2">
                         <Award className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium text-primary">{corretor.creci}</span>
+                        <span className="text-sm font-medium text-primary">{broker.creci}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-1">{corretor.especialidade}</p>
-                      <p className="text-sm text-muted-foreground">{corretor.experiencia}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{broker.specialties.join(' & ')}</p>
+                      <p className="text-sm text-muted-foreground">{broker.experience}</p>
                       <div className="flex items-center gap-4 mt-3 text-sm">
                         <div className="flex items-center gap-1">
                           <Phone className="h-3 w-3 text-primary" />
-                          <span className="text-muted-foreground">{corretor.telefone}</span>
+                          <span className="text-muted-foreground">{broker.phone}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Mail className="h-3 w-3 text-primary" />
-                          <span className="text-muted-foreground">{corretor.email}</span>
+                          <span className="text-muted-foreground">{broker.email}</span>
                         </div>
                       </div>
                     </div>
-                    {corretorSelecionado.id === corretor.id && (
+                    {selectedBroker.id === broker.id && (
                       <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                         <div className="w-2 h-2 bg-white rounded-full"></div>
                       </div>
@@ -145,7 +122,7 @@ export default function ContatoPage() {
           <div className="lg:col-span-1 space-y-8">
             <Card className="gradient-card border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl text-secondary">Contato - {corretorSelecionado.nome}</CardTitle>
+                <CardTitle className="text-2xl text-secondary">Contato - {selectedBroker.name}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-start gap-4">
@@ -154,7 +131,7 @@ export default function ContatoPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-secondary mb-1">Telefone</h3>
-                    <p className="text-muted-foreground">{corretorSelecionado.telefone}</p>
+                    <p className="text-muted-foreground">{selectedBroker.phone}</p>
                     <p className="text-muted-foreground">(11) 3333-4444</p>
                   </div>
                 </div>
@@ -165,7 +142,7 @@ export default function ContatoPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-secondary mb-1">E-mail</h3>
-                    <p className="text-muted-foreground">{corretorSelecionado.email}</p>
+                    <p className="text-muted-foreground">{selectedBroker.email}</p>
                     <p className="text-muted-foreground">contato@imovelpro.com</p>
                   </div>
                 </div>
@@ -210,7 +187,7 @@ export default function ContatoPage() {
               size="lg"
             >
               <MessageSquare className="h-5 w-5 mr-2" />
-              Falar com {corretorSelecionado.nome.split(" ")[0]} no WhatsApp
+              Falar com {selectedBroker.name.split(" ")[0]} no WhatsApp
             </Button>
           </div>
 
@@ -219,7 +196,7 @@ export default function ContatoPage() {
             <Card className="gradient-card border-0 shadow-lg">
               <CardHeader>
                 <CardTitle className="text-2xl text-secondary">
-                  Envie sua Mensagem para {corretorSelecionado.nome}
+                  Envie sua Mensagem para {selectedBroker.name}
                 </CardTitle>
               </CardHeader>
               <CardContent>
