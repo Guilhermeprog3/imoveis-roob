@@ -21,6 +21,7 @@ export function PropertyFilters({ onFilterChange }: FilterProps) {
     location: "all",
     bedrooms: "any",
     bathrooms: "any",
+    minArea: "", // Novo estado para área
     sortBy: "newest",
   })
 
@@ -41,6 +42,7 @@ export function PropertyFilters({ onFilterChange }: FilterProps) {
       location: "all",
       bedrooms: "any",
       bathrooms: "any",
+      minArea: "",
       sortBy: "newest",
     }
     setFilters(clearedFilters)
@@ -60,13 +62,14 @@ export function PropertyFilters({ onFilterChange }: FilterProps) {
         />
       </div>
 
-      {/* Filter Toggle Button */}
+      {/* Filter Toggle Button and Sort By Dropdown */}
       <div className="flex items-center justify-between">
         <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2">
           <Filter className="h-4 w-4" />
           Filtros Avançados
         </Button>
 
+        {/* SELETOR DE ORDENAÇÃO */}
         <div className="flex items-center gap-4">
           <Label htmlFor="sort">Ordenar por:</Label>
           <Select value={filters.sortBy} onValueChange={(value) => handleFilterChange("sortBy", value)}>
@@ -186,6 +189,17 @@ export function PropertyFilters({ onFilterChange }: FilterProps) {
                   placeholder="R$ 999.999.999"
                   value={filters.maxPrice}
                   onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
+                />
+              </div>
+
+              {/* NOVO CAMPO DE ÁREA */}
+              <div className="space-y-2 lg:col-span-2">
+                <Label>Área Mínima (m²)</Label>
+                <Input
+                  type="number"
+                  placeholder="Ex: 50"
+                  value={filters.minArea}
+                  onChange={(e) => handleFilterChange("minArea", e.target.value)}
                 />
               </div>
             </div>

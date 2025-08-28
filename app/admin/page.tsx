@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Home, LogOut, Plus, Building, Eye, DollarSign, TrendingUp, Users, Settings, BarChart3 } from "lucide-react"
+import { Home, LogOut, Plus, Building, Eye, DollarSign, Settings, EyeOff } from "lucide-react"
 import Link from "next/link"
 
 function AdminDashboard() {
@@ -27,18 +27,18 @@ function AdminDashboard() {
       color: "text-green-600",
     },
     {
-      title: "Vendas este Mês",
-      value: "R$ 2.4M",
-      description: "Total em vendas",
-      icon: DollarSign,
-      color: "text-blue-600",
+      title: "Imóveis Indisponíveis",
+      value: "6",
+      description: "Vendidos ou alugados",
+      icon: EyeOff,
+      color: "text-orange-600",
     },
     {
-      title: "Leads Gerados",
-      value: "47",
-      description: "Novos contatos",
-      icon: Users,
-      color: "text-purple-600",
+      title: "Imóveis Vendidos",
+      value: "3",
+      description: "Total de imóveis vendidos",
+      icon: DollarSign,
+      color: "text-blue-600",
     },
   ]
 
@@ -57,7 +57,7 @@ function AdminDashboard() {
             <div className="flex items-center space-x-4">
               <Link href="/" className="flex items-center space-x-2 hover:text-primary transition-colors">
                 <Home className="h-6 w-6" />
-                <span className="text-xl font-bold">ImóvelPro</span>
+                <span className="text-xl font-bold">GR Imóveis</span>
               </Link>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
                 Admin
@@ -121,13 +121,12 @@ function AdminDashboard() {
                   Gerenciar Imóveis
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start bg-transparent" size="lg">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Relatórios
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-transparent" size="lg">
-                <Settings className="h-4 w-4 mr-2" />
-                Configurações
+              {/* BOTÃO DE CONFIGURAÇÕES ATUALIZADO */}
+              <Button variant="outline" className="w-full justify-start bg-transparent" size="lg" asChild>
+                <Link href="/admin/configuracoes">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configurações
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -157,26 +156,6 @@ function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Performance Chart Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Performance de Vendas
-            </CardTitle>
-            <CardDescription>Acompanhe suas vendas mensais</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">Gráfico de Performance</p>
-                <p className="text-sm text-muted-foreground">Em breve: relatórios detalhados</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   )

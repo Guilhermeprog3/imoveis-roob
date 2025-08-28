@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Phone, Mail, MapPin, Clock, MessageSquare, Send, Award } from "lucide-react"
+import { Phone, Mail, MapPin, Clock, MessageSquare, Send, Award, Facebook, Instagram } from "lucide-react"
 import { NotificationToast } from "@/components/notification-toast"
 import { brokers } from "@/lib/data" // Importando os dados dos corretores
 
@@ -33,15 +33,29 @@ export default function ContatoPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate form submission
+    // Monta a mensagem para o WhatsApp
+    const whatsappMessage = `
+      Olá, ${selectedBroker.name}!
+      *Nome:* ${formData.name}
+      *Email:* ${formData.email}
+      *Telefone:* ${formData.phone}
+      *Assunto:* ${formData.subject}
+      *Mensagem:*
+      ${formData.message}
+    `
+    // Abre a URL do WhatsApp
+    const whatsappUrl = `https://wa.me/${selectedBroker.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`
+    window.open(whatsappUrl, "_blank")
+
+    // Simula o envio e exibe a notificação
     setTimeout(() => {
       setNotification({
-        message: `Mensagem enviada com sucesso para ${selectedBroker.name}! Entraremos em contato em breve.`,
+        message: `Sua mensagem está pronta para ser enviada para ${selectedBroker.name} no WhatsApp!`,
         type: "success",
       })
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
       setIsSubmitting(false)
-    }, 1500)
+    }, 1000)
   }
 
   const handleWhatsAppContact = () => {
@@ -122,7 +136,7 @@ export default function ContatoPage() {
           <div className="lg:col-span-1 space-y-8">
             <Card className="gradient-card border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl text-secondary">Contato - {selectedBroker.name}</CardTitle>
+                <CardTitle className="text-2xl text-secondary">Informações de Contato</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-start gap-4">
@@ -132,7 +146,6 @@ export default function ContatoPage() {
                   <div>
                     <h3 className="font-semibold text-secondary mb-1">Telefone</h3>
                     <p className="text-muted-foreground">{selectedBroker.phone}</p>
-                    <p className="text-muted-foreground">(11) 3333-4444</p>
                   </div>
                 </div>
 
@@ -143,23 +156,30 @@ export default function ContatoPage() {
                   <div>
                     <h3 className="font-semibold text-secondary mb-1">E-mail</h3>
                     <p className="text-muted-foreground">{selectedBroker.email}</p>
-                    <p className="text-muted-foreground">contato@imovelpro.com</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
                   <div className="p-3 bg-primary/10 rounded-lg">
-                    <MapPin className="h-6 w-6 text-primary" />
+                    <Facebook className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-secondary mb-1">Endereço</h3>
-                    <p className="text-muted-foreground">
-                      Rua das Flores, 123
-                      <br />
-                      Centro, São Paulo - SP
-                      <br />
-                      CEP: 01234-567
-                    </p>
+                    <h3 className="font-semibold text-secondary mb-1">Facebook</h3>
+                    <a href={selectedBroker.facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                      {selectedBroker.facebookUsername}
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <Instagram className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-secondary mb-1">Instagram</h3>
+                    <a href={selectedBroker.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                      {selectedBroker.instagramUsername}
+                    </a>
                   </div>
                 </div>
 
@@ -170,11 +190,7 @@ export default function ContatoPage() {
                   <div>
                     <h3 className="font-semibold text-secondary mb-1">Horário de Funcionamento</h3>
                     <p className="text-muted-foreground">
-                      Segunda a Sexta: 8h às 18h
-                      <br />
-                      Sábado: 8h às 14h
-                      <br />
-                      Domingo: Fechado
+                      Atendimento todos os dias
                     </p>
                   </div>
                 </div>

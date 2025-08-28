@@ -8,18 +8,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { X, Plus, Upload, ImageIcon } from "lucide-react"
+import { X, Plus, Upload, ImageIcon, Building, MapPin, DollarSign, Bed, Bath, Square, Car } from "lucide-react"
+import { Separator } from "@radix-ui/react-separator"
 
+// Interface atualizada com suites e closets
 interface PropertyFormData {
   title: string
   description: string
   price: string
-  location: string
-  address: string
+  bairro: string
+  cidade: string
   bedrooms: number
+  suites: number // Novo campo
+  closets: number // Novo campo
   bathrooms: number
   area: number
   garageSpaces: number
@@ -47,8 +51,14 @@ const propertyTypes = [
 
 const statusOptions = [
   { value: "disponivel", label: "Disponível" },
+  { value: "indisponivel", label: "Indisponível" },
   { value: "vendido", label: "Vendido" },
   { value: "alugado", label: "Alugado" },
+]
+
+const cityOptions = [
+    { value: "Teresina", label: "Teresina" },
+    { value: "Timon", label: "Timon" },
 ]
 
 const availableFeatures = [
@@ -71,10 +81,12 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
     title: initialData?.title || "",
     description: initialData?.description || "",
     price: initialData?.price || "",
-    location: initialData?.location || "",
-    address: initialData?.address || "",
-    bedrooms: initialData?.bedrooms || 1,
-    bathrooms: initialData?.bathrooms || 1,
+    bairro: initialData?.bairro || "",
+    cidade: initialData?.cidade || "",
+    bedrooms: initialData?.bedrooms || 0,
+    suites: initialData?.suites || 0, // Novo campo
+    closets: initialData?.closets || 0, // Novo campo
+    bathrooms: initialData?.bathrooms || 0,
     area: initialData?.area || 0,
     garageSpaces: initialData?.garageSpaces || 0,
     type: initialData?.type || "",
@@ -158,227 +170,171 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Basic Information */}
-        <Card>
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* CARD DE INFORMAÇÕES PRINCIPAIS */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building className="h-6 w-6 text-primary" />
+            Informações Principais
+          </CardTitle>
+          <CardDescription>Defina os detalhes essenciais do seu anúncio.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="title">Título do Anúncio *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => handleInputChange("title", e.target.value)}
+              placeholder="Ex: Casa Moderna com Piscina"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição Completa *</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Descreva detalhadamente o imóvel..."
+              rows={5}
+              required
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* CARD DE DETALHES E LOCALIZAÇÃO */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Informações Básicas</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-6 w-6 text-primary" />
+              Valores e Status
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="title">Título do Anúncio *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="Ex: Casa Moderna com Piscina"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Descrição Completa *</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Descreva detalhadamente o imóvel..."
-                rows={4}
-                required
-              />
-            </div>
-
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="type">Tipo de Imóvel *</Label>
-                <Select value={formData.type} onValueChange={(value) => handleInputChange("type", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {propertyTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status *</Label>
-                <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                    <Label htmlFor="type">Tipo de Imóvel *</Label>
+                    <Select value={formData.type} onValueChange={(value) => handleInputChange("type", value)}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{propertyTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="status">Status *</Label>
+                    <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>{statusOptions.map(status => <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                </div>
             </div>
-
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="price">Preço *</Label>
-              <Input
-                id="price"
-                value={formData.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
-                placeholder="Ex: R$ 850.000 ou R$ 3.500/mês"
-                required
-              />
+              <Input id="price" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="Ex: R$ 850.000 ou R$ 3.500/mês" required />
             </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="featured"
-                checked={formData.featured}
-                onCheckedChange={(checked) => handleInputChange("featured", checked)}
-              />
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox id="featured" checked={formData.featured} onCheckedChange={(checked) => handleInputChange("featured", checked)} />
               <Label htmlFor="featured">Marcar como Imóvel Destaque</Label>
             </div>
           </CardContent>
         </Card>
 
-        {/* Location and Details */}
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Localização e Detalhes</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-6 w-6 text-primary" />
+              Localização
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="location">Localização (Bairro, Cidade) *</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
-                placeholder="Ex: Jardim das Flores, São Paulo"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="address">Endereço Completo *</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                placeholder="Ex: Rua das Flores, 123 - Jardim das Flores"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="bedrooms">Quartos</Label>
-                <Input
-                  id="bedrooms"
-                  type="number"
-                  min="0"
-                  value={formData.bedrooms}
-                  onChange={(e) => handleInputChange("bedrooms", Number.parseInt(e.target.value))}
-                />
+          <CardContent className="space-y-6">
+             <div className="space-y-2">
+                <Label htmlFor="cidade">Cidade *</Label>
+                <Select value={formData.cidade} onValueChange={(value) => handleInputChange("cidade", value)}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecione a cidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {cityOptions.map((city) => (
+                            <SelectItem key={city.value} value={city.value}>
+                                {city.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
               </div>
-
-              <div>
-                <Label htmlFor="bathrooms">Banheiros</Label>
-                <Input
-                  id="bathrooms"
-                  type="number"
-                  min="0"
-                  value={formData.bathrooms}
-                  onChange={(e) => handleInputChange("bathrooms", Number.parseInt(e.target.value))}
-                />
+              <div className="space-y-2">
+                <Label htmlFor="bairro">Bairro *</Label>
+                <Input id="bairro" value={formData.bairro} onChange={(e) => handleInputChange("bairro", e.target.value)} placeholder="Ex: Jardim das Flores" required />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="area">Área (m²)</Label>
-                <Input
-                  id="area"
-                  type="number"
-                  min="0"
-                  value={formData.area}
-                  onChange={(e) => handleInputChange("area", Number.parseInt(e.target.value))}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="garageSpaces">Vagas de Garagem</Label>
-                <Input
-                  id="garageSpaces"
-                  type="number"
-                  min="0"
-                  value={formData.garageSpaces}
-                  onChange={(e) => handleInputChange("garageSpaces", Number.parseInt(e.target.value))}
-                />
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Images */}
-      <Card>
+      {/* CARD DE ESPECIFICAÇÕES */}
+      <Card className="shadow-lg">
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Bed className="h-6 w-6 text-primary" />
+                Especificações
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-2">
+                <Label htmlFor="bedrooms">Quartos</Label>
+                <Input id="bedrooms" type="number" min="0" value={formData.bedrooms} onChange={(e) => handleInputChange("bedrooms", Number.parseInt(e.target.value || '0'))} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="suites">Suítes</Label>
+                <Input id="suites" type="number" min="0" value={formData.suites} onChange={(e) => handleInputChange("suites", Number.parseInt(e.target.value || '0'))} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="closets">Closets</Label>
+                <Input id="closets" type="number" min="0" value={formData.closets} onChange={(e) => handleInputChange("closets", Number.parseInt(e.target.value || '0'))} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="bathrooms">Banheiros</Label>
+                <Input id="bathrooms" type="number" min="0" value={formData.bathrooms} onChange={(e) => handleInputChange("bathrooms", Number.parseInt(e.target.value || '0'))} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="area">Área (m²)</Label>
+                <Input id="area" type="number" min="0" value={formData.area} onChange={(e) => handleInputChange("area", Number.parseInt(e.target.value || '0'))} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="garageSpaces">Vagas de Garagem</Label>
+                <Input id="garageSpaces" type="number" min="0" value={formData.garageSpaces} onChange={(e) => handleInputChange("garageSpaces", Number.parseInt(e.target.value || '0'))} />
+            </div>
+        </CardContent>
+      </Card>
+      
+      {/* CARD DE IMAGENS */}
+      <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Fotos do Imóvel</CardTitle>
+          <CardDescription>Envie as melhores fotos para atrair mais clientes.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Upload de Imagens
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </div>
-
-            <div className="text-sm text-muted-foreground">Ou adicione por URL:</div>
-
-            <div className="flex gap-2">
-              <Input placeholder="URL da imagem" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} />
-              <Button type="button" onClick={addImage} variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar
-              </Button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="flex-1">
+              <Upload className="h-4 w-4 mr-2" />
+              Upload de Imagens
+            </Button>
+            <div className="flex flex-1 gap-2 items-center">
+                <Input placeholder="Ou adicione por URL" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} />
+                <Button type="button" onClick={addImage} variant="outline" className="whitespace-nowrap"><Plus className="h-4 w-4 mr-2" />Adicionar</Button>
             </div>
           </div>
+          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileUpload} className="hidden" />
 
           {formData.images.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-4 border-t">
               {formData.images.map((image, index) => (
-                <div key={index} className="relative group">
-                  <ImageIcon
-                    src={image || "/placeholder.svg?height=150&width=200"}
-                    alt={`Foto ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => removeImage(index)}
-                  >
-                    <X className="h-3 w-3" />
+                <div key={index} className="relative group aspect-square">
+                  <img src={image || "/placeholder.svg"} alt={`Foto ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
+                  <Button type="button" variant="destructive" size="icon" className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeImage(index)}>
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
@@ -387,71 +343,53 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
         </CardContent>
       </Card>
 
-      {/* Features */}
-      <Card>
+      {/* CARD DE CARACTERÍSTICAS */}
+      <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>Características</CardTitle>
+          <CardTitle>Características Adicionais</CardTitle>
+          <CardDescription>Selecione as comodidades que o imóvel oferece.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {availableFeatures.map((feature) => (
-              <div key={feature} className="flex items-center space-x-2">
-                <Checkbox
-                  id={feature}
-                  checked={formData.features.includes(feature)}
-                  onCheckedChange={() => toggleFeature(feature)}
-                />
-                <Label htmlFor={feature} className="text-sm">
-                  {feature}
-                </Label>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t pt-4">
-            <Label className="text-sm font-medium mb-2 block">Adicionar Característica Personalizada</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Ex: Piscina aquecida, Sauna, etc."
-                value={customFeature}
-                onChange={(e) => setCustomFeature(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addCustomFeature())}
-              />
-              <Button type="button" onClick={addCustomFeature} variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar
-              </Button>
-            </div>
-          </div>
-
-          {formData.features.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm font-medium mb-2">Características selecionadas:</p>
-              <div className="flex flex-wrap gap-2">
-                {formData.features.map((feature) => (
-                  <Badge key={feature} variant="secondary" className="flex items-center gap-1">
-                    {feature}
-                    <button
-                      type="button"
-                      onClick={() => removeFeature(feature)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
+        <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {availableFeatures.map((feature) => (
+                    <div key={feature} className="flex items-center space-x-2">
+                        <Checkbox id={feature} checked={formData.features.includes(feature)} onCheckedChange={() => toggleFeature(feature)} />
+                        <Label htmlFor={feature} className="text-sm font-normal cursor-pointer">{feature}</Label>
+                    </div>
                 ))}
-              </div>
             </div>
-          )}
+            <Separator className="my-6" />
+            <div className="space-y-2">
+                <Label className="text-base font-medium">Adicionar Característica Personalizada</Label>
+                <div className="flex gap-2">
+                    <Input placeholder="Ex: Piscina aquecida, Sauna, etc." value={customFeature} onChange={(e) => setCustomFeature(e.target.value)} onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addCustomFeature())} />
+                    <Button type="button" onClick={addCustomFeature} variant="outline"><Plus className="h-4 w-4 mr-2" />Adicionar</Button>
+                </div>
+            </div>
+            {formData.features.length > 0 && (
+                <div className="mt-6">
+                <p className="text-base font-medium mb-3">Características selecionadas:</p>
+                <div className="flex flex-wrap gap-2">
+                    {formData.features.map((feature) => (
+                    <Badge key={feature} variant="secondary" className="text-sm">
+                        {feature}
+                        <button type="button" onClick={() => removeFeature(feature)} className="ml-2 hover:text-destructive">
+                        <X className="h-3 w-3" />
+                        </button>
+                    </Badge>
+                    ))}
+                </div>
+                </div>
+            )}
         </CardContent>
       </Card>
 
-      {/* Form Actions */}
-      <div className="flex gap-4 justify-end">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+      {/* AÇÕES FINAIS */}
+      <div className="flex gap-4 justify-end pt-4">
+        <Button type="button" variant="outline" size="lg" onClick={onCancel} disabled={isLoading}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" size="lg" disabled={isLoading}>
           {isLoading ? "Salvando..." : "Salvar Imóvel"}
         </Button>
       </div>

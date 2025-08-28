@@ -35,7 +35,7 @@ export function Header() {
                   <User className="h-4 w-4 inline mr-1" />
                   Dashboard
                 </Link>
-                <Button variant="outline" size="sm" onClick={logout}>
+                <Button size="sm" onClick={logout}>
                   <LogOut className="h-4 w-4 mr-1" />
                   Sair
                 </Button>

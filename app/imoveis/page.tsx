@@ -14,7 +14,7 @@ const allProperties = [
     id: 1,
     title: "Casa Moderna com Piscina",
     price: "R$ 850.000",
-    location: "Jardim das Flores, São Paulo",
+    location: "Jardim das Flores",
     bedrooms: 4,
     bathrooms: 3,
     area: 280,
@@ -27,7 +27,7 @@ const allProperties = [
     id: 2,
     title: "Apartamento Luxuoso Centro",
     price: "R$ 3.500/mês",
-    location: "Centro, São Paulo",
+    location: "Centro",
     bedrooms: 2,
     bathrooms: 2,
     area: 95,
@@ -40,7 +40,7 @@ const allProperties = [
     id: 3,
     title: "Cobertura com Vista Panorâmica",
     price: "R$ 1.200.000",
-    location: "Vila Madalena, São Paulo",
+    location: "Vila Madalena",
     bedrooms: 3,
     bathrooms: 3,
     area: 180,
@@ -53,7 +53,7 @@ const allProperties = [
     id: 4,
     title: "Casa Familiar Espaçosa",
     price: "R$ 650.000",
-    location: "Vila Nova, São Paulo",
+    location: "Vila Nova",
     bedrooms: 3,
     bathrooms: 2,
     area: 220,
@@ -65,7 +65,7 @@ const allProperties = [
     id: 5,
     title: "Apartamento Compacto Moderno",
     price: "R$ 2.200/mês",
-    location: "Liberdade, São Paulo",
+    location: "Liberdade",
     bedrooms: 1,
     bathrooms: 1,
     area: 45,
@@ -77,7 +77,7 @@ const allProperties = [
     id: 6,
     title: "Casa com Quintal Grande",
     price: "R$ 480.000",
-    location: "Zona Norte, São Paulo",
+    location: "Zona Norte",
     bedrooms: 2,
     bathrooms: 1,
     area: 150,
@@ -89,7 +89,7 @@ const allProperties = [
     id: 7,
     title: "Apartamento de Alto Padrão",
     price: "R$ 1.800.000",
-    location: "Jardins, São Paulo",
+    location: "Jardins",
     bedrooms: 4,
     bathrooms: 4,
     area: 200,
@@ -101,7 +101,7 @@ const allProperties = [
     id: 8,
     title: "Terreno Comercial",
     price: "R$ 2.500.000",
-    location: "Avenida Principal, São Paulo",
+    location: "Avenida Principal",
     bedrooms: 0,
     bathrooms: 0,
     area: 500,
@@ -122,6 +122,7 @@ export default function ImoveisPage() {
     location: "",
     bedrooms: "",
     bathrooms: "",
+    minArea: "", // Adicionado estado para área
     sortBy: "newest",
   })
   const [currentPage, setCurrentPage] = useState(1)
@@ -140,17 +141,17 @@ export default function ImoveisPage() {
       }
 
       // Type filter
-      if (filters.type && property.type !== filters.type) {
+      if (filters.type && filters.type !== "all" && property.type !== filters.type) {
         return false
       }
 
       // Bedrooms filter
-      if (filters.bedrooms && property.bedrooms < Number.parseInt(filters.bedrooms)) {
+      if (filters.bedrooms && filters.bedrooms !== "any" && property.bedrooms < Number.parseInt(filters.bedrooms)) {
         return false
       }
 
       // Bathrooms filter
-      if (filters.bathrooms && property.bathrooms < Number.parseInt(filters.bathrooms)) {
+      if (filters.bathrooms && filters.bathrooms !== "any" && property.bathrooms < Number.parseInt(filters.bathrooms)) {
         return false
       }
 
@@ -163,6 +164,11 @@ export default function ImoveisPage() {
         if (filters.maxPrice && priceValue > Number.parseInt(filters.maxPrice)) {
           return false
         }
+      }
+      
+      // FILTRO DE ÁREA ADICIONADO
+      if (filters.minArea && property.area < Number.parseInt(filters.minArea)) {
+        return false
       }
 
       return true
@@ -284,6 +290,7 @@ export default function ImoveisPage() {
                   location: "",
                   bedrooms: "",
                   bathrooms: "",
+                  minArea: "",
                   sortBy: "newest",
                 })
               }

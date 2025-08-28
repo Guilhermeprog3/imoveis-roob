@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, notFound } from "next/navigation" // Importe o notFound
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ImageGallery } from "@/components/image-gallery"
-import { PropertyMap } from "@/components/property-map"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -30,35 +29,14 @@ import {
   MessageCircle,
 } from "lucide-react"
 import Link from "next/link"
+import { brokers } from "@/lib/data" 
 
-const brokers = {
-  genilson: {
-    name: "Genilson Silva Rios",
-    creci: "CRECI 15.847-PI",
-    phone: "(86) 99999-8888",
-    email: "genilson@imovelpro.com",
-    avatar: "/professional-male-realtor-portrait.png",
-    specialties: ["Residencial", "Comercial"],
-    experience: "8 anos de experiência",
-  },
-  gennyce: {
-    name: "Gennyce Silva Rios",
-    creci: "CRECI 18.234-MA",
-    phone: "(99) 99999-7777",
-    email: "gennyce@imovelpro.com",
-    avatar: "/professional-female-realtor-portrait.png",
-    specialties: ["Apartamentos", "Investimentos"],
-    experience: "6 anos de experiência",
-  },
-}
-
-// Mock data - seria substituído por dados reais do banco
 const propertyData = {
   1: {
     id: 1,
     title: "Casa Moderna com Piscina",
     price: "R$ 850.000",
-    location: "Jardim das Flores, Teresina - PI",
+    location: "Jardim das Flores",
     address: "Rua das Flores, 123 - Jardim das Flores, Teresina - PI",
     bedrooms: 4,
     bathrooms: 3,
@@ -106,7 +84,7 @@ const propertyData = {
     id: 2,
     title: "Apartamento Luxuoso Centro",
     price: "R$ 450.000",
-    location: "Centro, Timon - MA",
+    location: "Centro",
     address: "Av. Getúlio Vargas, 456 - Centro, Timon - MA",
     bedrooms: 3,
     bathrooms: 2,
@@ -146,39 +124,32 @@ const propertyData = {
 export default function PropertyDetailsPage() {
   const params = useParams()
   const propertyId = params.id as string
-  const property = propertyData[propertyId as keyof typeof propertyData]
+  const property = propertyData[propertyId as unknown as keyof typeof propertyData]
 
-  const [selectedBroker, setSelectedBroker] = useState<"genilson" | "gennyce">("genilson")
+  const [selectedBrokerId, setSelectedBrokerId] = useState<string>(brokers[0].id)
 
+  // AQUI ESTÁ A MUDANÇA PRINCIPAL
+  // Se a propriedade não for encontrada, chame a função notFound()
   if (!property) {
-    return (
-      <div className="min-h-screen">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-secondary mb-4">Imóvel não encontrado</h1>
-            <Button asChild>
-              <Link href="/imoveis">Voltar para Listagem</Link>
-            </Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    )
+    notFound();
+  }
+
+  const currentBroker = brokers.find(b => b.id === selectedBrokerId)
+
+  if (!currentBroker) {
+    return <div>Corretor não encontrado.</div>; // Fallback
   }
 
   const handleWhatsAppContact = () => {
-    const broker = brokers[selectedBroker]
-    const message = `Olá ${broker.name}! Tenho interesse no imóvel: ${property.title} (Ref: ${property.id}). Gostaria de mais informações.`
-    const whatsappUrl = `https://wa.me/55${broker.phone.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`
+    const message = `Olá ${currentBroker.name}! Tenho interesse no imóvel: ${property.title} (Ref: ${property.id}). Gostaria de mais informações.`
+    const whatsappUrl = `https://wa.me/${currentBroker.whatsapp}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
   const handleEmailContact = () => {
-    const broker = brokers[selectedBroker]
     const subject = `Interesse no imóvel: ${property.title} (Ref: ${property.id})`
-    const body = `Olá ${broker.name},\n\nTenho interesse no imóvel "${property.title}" e gostaria de mais informações.\n\nAguardo retorno.\n\nObrigado(a)!`
-    window.location.href = `mailto:${broker.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    const body = `Olá ${currentBroker.name},\n\nTenho interesse no imóvel "${property.title}" e gostaria de mais informações.\n\nAguardo retorno.\n\nObrigado(a)!`
+    window.location.href = `mailto:${currentBroker.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   }
 
   const handleShare = async () => {
@@ -193,20 +164,15 @@ export default function PropertyDetailsPage() {
         console.log("Error sharing:", error)
       }
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href)
       alert("Link copiado para a área de transferência!")
     }
   }
 
-  const currentBroker = brokers[selectedBroker]
-
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <Header />
-
-      <main className="container mx-auto px-4 py-8">
-        {/* Back Button */}
+      <main className="container mx-auto px-4 py-8 flex-grow">
         <div className="mb-6">
           <Button variant="outline" asChild>
             <Link href="/imoveis">
@@ -219,10 +185,7 @@ export default function PropertyDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Image Gallery */}
             <ImageGallery images={property.images} title={property.title} />
-
-            {/* Property Info */}
             <div className="space-y-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -257,32 +220,32 @@ export default function PropertyDetailsPage() {
                   </Button>
                 </div>
               </div>
-
               <div className="text-4xl font-bold text-primary">{property.price}</div>
-
-              {/* Quick Stats */}
-              <div className="flex items-center gap-6 text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Bed className="h-5 w-5" />
-                  <span>{property.bedrooms} quartos</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Bath className="h-5 w-5" />
-                  <span>{property.bathrooms} banheiros</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Square className="h-5 w-5" />
-                  <span>{property.area}m²</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Car className="h-5 w-5" />
-                  <span>{property.garageSpaces} vagas</span>
-                </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-muted-foreground pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <Bed className="h-5 w-5" />
+                    <span>{property.bedrooms} quartos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bath className="h-5 w-5" />
+                    <span>{property.bathrooms} banheiros</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Square className="h-5 w-5" />
+                    <span>{property.area}m²</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Car className="h-5 w-5" />
+                    <span>{property.garageSpaces} vagas</span>
+                  </div>
+                  {property.features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <feature.icon className="h-5 w-5" />
+                      <span className="text-sm">{feature.label}</span>
+                    </div>
+                  ))}
               </div>
-
               <Separator />
-
-              {/* Description */}
               <div>
                 <h2 className="text-2xl font-semibold text-secondary mb-4">Descrição</h2>
                 <div className="prose prose-gray max-w-none">
@@ -293,22 +256,6 @@ export default function PropertyDetailsPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Features */}
-              <div>
-                <h2 className="text-2xl font-semibold text-secondary mb-4">Características</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {property.features.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2 p-3 bg-card rounded-lg border">
-                      <feature.icon className="h-5 w-5 text-primary" />
-                      <span className="text-sm text-card-foreground">{feature.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Map */}
-              <PropertyMap address={property.address} />
             </div>
           </div>
 
@@ -320,30 +267,22 @@ export default function PropertyDetailsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                  <Button
-                    variant={selectedBroker === "genilson" ? "default" : "outline"}
-                    onClick={() => setSelectedBroker("genilson")}
-                    className="text-sm"
-                  >
-                    Genilson
-                  </Button>
-                  <Button
-                    variant={selectedBroker === "gennyce" ? "default" : "outline"}
-                    onClick={() => setSelectedBroker("gennyce")}
-                    className="text-sm"
-                  >
-                    Gennyce
-                  </Button>
+                  {brokers.map(broker => (
+                     <Button
+                       key={broker.id}
+                       variant={selectedBrokerId === broker.id ? "default" : "outline"}
+                       onClick={() => setSelectedBrokerId(broker.id)}
+                       className="text-sm"
+                     >
+                       {broker.name.split(" ")[0]}
+                     </Button>
+                  ))}
                 </div>
-
                 <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={currentBroker.avatar || "/placeholder.svg"} alt={currentBroker.name} />
+                    <AvatarImage src={currentBroker.photo || "/placeholder.svg"} alt={currentBroker.name} />
                     <AvatarFallback>
-                      {currentBroker.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+                      {currentBroker.name.split(" ").map((n) => n[0]).join("")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -359,7 +298,6 @@ export default function PropertyDetailsPage() {
                     </div>
                   </div>
                 </div>
-
                 <Button onClick={handleWhatsAppContact} className="w-full" size="lg">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   WhatsApp
@@ -374,8 +312,6 @@ export default function PropertyDetailsPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Specifications */}
             <Card>
               <CardHeader>
                 <CardTitle>Especificações</CardTitle>
@@ -391,8 +327,6 @@ export default function PropertyDetailsPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Reference */}
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
@@ -404,7 +338,7 @@ export default function PropertyDetailsPage() {
           </div>
         </div>
       </main>
-
+      <div className="pt-16"></div>
       <Footer />
     </div>
   )

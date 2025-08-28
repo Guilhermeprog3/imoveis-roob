@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -55,7 +54,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 text-white hover:text-primary transition-colors">
             <Home className="h-8 w-8" />
-            <span className="text-2xl font-bold">ImóvelPro</span>
+            <span className="text-2xl font-bold">GR Imóveis</span>
           </Link>
         </div>
 
@@ -105,6 +104,14 @@ export default function LoginPage() {
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
+                </div>
+                <div className="flex justify-end">
+                    <Link
+                      href="/admin/recuperar-senha"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Esqueceu a senha?
+                    </Link>
                 </div>
               </div>
 
