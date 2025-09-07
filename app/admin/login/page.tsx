@@ -1,3 +1,4 @@
+// app/admin/login/page.tsx
 "use client"
 
 import type React from "react"
@@ -126,13 +127,6 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-muted rounded-lg">
-              <p className="text-sm font-medium text-muted-foreground mb-2">Credenciais de Demonstração:</p>
-              <p className="text-sm text-muted-foreground">Email: admin@imovelpro.com</p>
-              <p className="text-sm text-muted-foreground">Senha: admin123</p>
-            </div>
 
             <div className="mt-6 text-center">
               <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">

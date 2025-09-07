@@ -1,5 +1,5 @@
+// app/admin/imoveis/novo/page.tsx
 "use client"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/components/protected-route"
@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Home, LogOut, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { db, storage } from "@/firebase/config";
+import { collection, addDoc } from "firebase/firestore";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 function NewPropertyPage() {
   const { user, logout } = useAuth()
@@ -16,17 +19,37 @@ function NewPropertyPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (data: any) => {
-    setIsLoading(true)
+    setIsLoading(true);
+    try {
+      // 1. Fazer o upload das imagens para o Firebase Storage
+      const imageUrls = await Promise.all(
+        data.images.map(async (image: string, index: number) => {
+          if (image.startsWith("data:image")) { // Verifica se é uma imagem em base64
+            const storageRef = ref(storage, `imoveis/${Date.now()}_${index}`);
+            const uploadResult = await uploadString(storageRef, image, 'data_url');
+            return getDownloadURL(uploadResult.ref);
+          }
+          return image; // Mantém a URL se já for uma
+        })
+      );
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+      // 2. Salvar os dados do imóvel (com as URLs das imagens) no Firestore
+      await addDoc(collection(db, "imoveis"), {
+        ...data,
+        images: imageUrls,
+        createdAt: new Date().toISOString(), // Adiciona um timestamp
+      });
 
-    console.log("Novo imóvel:", data)
+      // 3. Redirecionar para a página de gerenciamento
+      router.push("/admin/imoveis");
+    } catch (error) {
+      console.error("Erro ao adicionar imóvel: ", error);
+      // Aqui você pode adicionar um toast de erro para o usuário
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // In a real app, you would save to database here
-    setIsLoading(false)
-    router.push("/admin/imoveis")
-  }
 
   const handleCancel = () => {
     router.push("/admin/imoveis")
