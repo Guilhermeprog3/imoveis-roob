@@ -1,15 +1,51 @@
-import Link from "next/link"
-import { Home, Phone, Facebook, Instagram } from "lucide-react"
-import { brokers } from "@/lib/data"
+"use client"
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Home, Phone, Facebook, Instagram, Loader2 } from "lucide-react";
+import { db } from "@/firebase/config";
+import { collection, getDocs } from "firebase/firestore";
+
+interface Broker {
+  id: string;
+  nome: string;
+  whatsapp: string;
+  phone: string;
+  facebook?: string;
+  instagram?: string;
+  facebookUsername?: string;
+  instagramUsername?: string;
+}
 
 export function Footer() {
+  const [brokers, setBrokers] = useState<Broker[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBrokers = async () => {
+      setIsLoading(true);
+      try {
+        const querySnapshot = await getDocs(collection(db, "usuarios"));
+        const brokersData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Broker));
+        setBrokers(brokersData);
+      } catch (error) {
+        console.error("Erro ao buscar dados dos corretores para o rodapé:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBrokers();
+  }, []);
+
   return (
     <footer className="bg-secondary text-secondary-foreground">
       <div className="container mx-auto px-4 py-12">
-        {/* Grid principal ajustado para lg:grid-cols-6 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           
-          {/* Logo e Descrição: Ocupa 2 colunas em telas grandes */}
           <div className="space-y-4 lg:col-span-2">
             <div className="flex items-center space-x-2">
               <Home className="h-8 w-8 text-primary" />
@@ -20,34 +56,16 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Links Rápidos: Ocupa 1 coluna em telas grandes */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
-              <li>
-                <Link href="/" className="text-secondary-foreground/80 hover:text-primary transition-colors">
-                  Início
-                </Link>
-              </li>
-              <li>
-                <Link href="/imoveis" className="text-secondary-foreground/80 hover:text-primary transition-colors">
-                  Imóveis
-                </Link>
-              </li>
-              <li>
-                <Link href="/contato" className="text-secondary-foreground/80 hover:text-primary transition-colors">
-                  Contato
-                </Link>
-              </li>
-              <li>
-                <Link href="/sobre" className="text-secondary-foreground/80 hover:text-primary transition-colors">
-                  Sobre Nós
-                </Link>
-              </li>
+              <li><Link href="/" className="text-secondary-foreground/80 hover:text-primary transition-colors">Início</Link></li>
+              <li><Link href="/imoveis" className="text-secondary-foreground/80 hover:text-primary transition-colors">Imóveis</Link></li>
+              <li><Link href="/contato" className="text-secondary-foreground/80 hover:text-primary transition-colors">Contato</Link></li>
+              <li><Link href="/sobre" className="text-secondary-foreground/80 hover:text-primary transition-colors">Sobre Nós</Link></li>
             </ul>
           </div>
 
-          {/* Serviços: Ocupa 1 coluna em telas grandes */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Serviços</h3>
             <ul className="space-y-2">
@@ -58,31 +76,40 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contato: Ocupa 2 colunas em telas grandes */}
           <div className="lg:col-span-2">
             <h3 className="text-lg font-semibold mb-4">Contato</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {brokers.map((broker) => (
-                <div key={broker.id}>
-                  <h4 className="font-semibold text-primary">{broker.name}</h4>
-                  <div className="space-y-2 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 text-primary" />
-                      <a href={`https://wa.me/${broker.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground/80 hover:text-primary">
-                        {broker.phone}
-                      </a>
-                    </div>
-                    <a href={broker.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
-                      <Facebook className="h-4 w-4" />
-                      <span>{broker.facebookUsername}</span>
-                    </a>
-                    <a href={broker.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
-                      <Instagram className="h-4 w-4" />
-                      <span>{broker.instagramUsername}</span>
-                    </a>
-                  </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center sm:col-span-2">
+                  <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
-              ))}
+              ) : (
+                brokers.map((broker) => (
+                  <div key={broker.id}>
+                    <h4 className="font-semibold text-primary">{broker.nome}</h4>
+                    <div className="space-y-2 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4 text-primary" />
+                        <a href={`https://wa.me/${broker.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground/80 hover:text-primary">
+                          {broker.phone}
+                        </a>
+                      </div>
+                      {broker.facebookUsername && (
+                        <a href={broker.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
+                          <Facebook className="h-4 w-4" />
+                          <span>{broker.facebookUsername}</span>
+                        </a>
+                      )}
+                      {broker.instagramUsername && (
+                        <a href={broker.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
+                          <Instagram className="h-4 w-4" />
+                          <span>{broker.instagramUsername}</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

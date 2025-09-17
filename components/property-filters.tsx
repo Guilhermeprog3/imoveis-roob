@@ -154,7 +154,6 @@ export function PropertyFilters({ onFilterChange }: FilterProps) {
                 </Select>
               </div>
 
-              {/* Bathrooms */}
               <div className="space-y-2">
                 <Label>Banheiros</Label>
                 <Select value={filters.bathrooms} onValueChange={(value) => handleFilterChange("bathrooms", value)}>
@@ -171,7 +170,6 @@ export function PropertyFilters({ onFilterChange }: FilterProps) {
                 </Select>
               </div>
 
-              {/* Price Range */}
               <div className="space-y-2">
                 <Label>Preço Mínimo</Label>
                 <Input
@@ -192,7 +190,6 @@ export function PropertyFilters({ onFilterChange }: FilterProps) {
                 />
               </div>
 
-              {/* NOVO CAMPO DE ÁREA */}
               <div className="space-y-2 lg:col-span-2">
                 <Label>Área Mínima (m²)</Label>
                 <Input

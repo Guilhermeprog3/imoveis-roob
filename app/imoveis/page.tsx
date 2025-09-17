@@ -1,208 +1,154 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { PropertyFilters } from "@/components/property-filters"
 import { PropertyCard } from "@/components/property-card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { db } from "@/firebase/config"
+import { collection, getDocs, query, orderBy } from "firebase/firestore"
 
-// Mock data - será substituído por dados reais do banco
-const allProperties = [
-  {
-    id: 1,
-    title: "Casa Moderna com Piscina",
-    price: "R$ 850.000",
-    location: "Jardim das Flores",
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 280,
-    type: "casa",
-    status: "À Venda" as const,
-    image: "/modern-house-with-pool.png",
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "Apartamento Luxuoso Centro",
-    price: "R$ 3.500/mês",
-    location: "Centro",
-    bedrooms: 2,
-    bathrooms: 2,
-    area: 95,
-    type: "apartamento",
-    status: "Para Alugar" as const,
-    image: "/luxury-apartment-interior.png",
-    featured: true,
-  },
-  {
-    id: 3,
-    title: "Cobertura com Vista Panorâmica",
-    price: "R$ 1.200.000",
-    location: "Vila Madalena",
-    bedrooms: 3,
-    bathrooms: 3,
-    area: 180,
-    type: "cobertura",
-    status: "À Venda" as const,
-    image: "/penthouse-city-view.png",
-    featured: true,
-  },
-  {
-    id: 4,
-    title: "Casa Familiar Espaçosa",
-    price: "R$ 650.000",
-    location: "Vila Nova",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 220,
-    type: "casa",
-    status: "À Venda" as const,
-    image: "/spacious-family-house.png",
-  },
-  {
-    id: 5,
-    title: "Apartamento Compacto Moderno",
-    price: "R$ 2.200/mês",
-    location: "Liberdade",
-    bedrooms: 1,
-    bathrooms: 1,
-    area: 45,
-    type: "apartamento",
-    status: "Para Alugar" as const,
-    image: "/modern-compact-apartment.png",
-  },
-  {
-    id: 6,
-    title: "Casa com Quintal Grande",
-    price: "R$ 480.000",
-    location: "Zona Norte",
-    bedrooms: 2,
-    bathrooms: 1,
-    area: 150,
-    type: "casa",
-    status: "À Venda" as const,
-    image: "/house-with-large-backyard.png",
-  },
-  {
-    id: 7,
-    title: "Apartamento de Alto Padrão",
-    price: "R$ 1.800.000",
-    location: "Jardins",
-    bedrooms: 4,
-    bathrooms: 4,
-    area: 200,
-    type: "apartamento",
-    status: "À Venda" as const,
-    image: "/luxury-high-end-apartment.png",
-  },
-  {
-    id: 8,
-    title: "Terreno Comercial",
-    price: "R$ 2.500.000",
-    location: "Avenida Principal",
-    bedrooms: 0,
-    bathrooms: 0,
-    area: 500,
-    type: "terreno",
-    status: "À Venda" as const,
-    image: "/commercial-land-plot.png",
-  },
-]
+interface PropertyFromDB {
+  id: string;
+  title: string;
+  price: string;
+  bairro: string;
+  cidade: string;
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  type: string;
+  status: "disponivel" | "vendido" | "alugado" | "indisponivel";
+  images: string[];
+  featured?: boolean;
+  createdAt: string;
+}
+
+interface PropertyForCard {
+    id: string;
+    title: string;
+    price: string;
+    location: string;
+    bedrooms: number;
+    bathrooms: number;
+    area: number;
+    type: string;
+    status: "À Venda" | "Para Alugar" | "Vendido" | "Alugado";
+    image: string;
+    featured?: boolean;
+}
+
 
 const ITEMS_PER_PAGE = 6
 
 export default function ImoveisPage() {
+  const [allProperties, setAllProperties] = useState<PropertyFromDB[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [filters, setFilters] = useState({
     search: "",
-    type: "",
+    type: "all",
     minPrice: "",
     maxPrice: "",
-    location: "",
-    bedrooms: "",
-    bathrooms: "",
-    minArea: "", // Adicionado estado para área
+    location: "all",
+    bedrooms: "any",
+    bathrooms: "any",
+    minArea: "",
     sortBy: "newest",
   })
   const [currentPage, setCurrentPage] = useState(1)
 
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setIsLoading(true)
+      try {
+        const q = query(collection(db, "imoveis"), orderBy("createdAt", "desc"))
+        const querySnapshot = await getDocs(q)
+        const propertiesData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                title: data.title || "",
+                price: data.price || "0",
+                bairro: data.bairro || "",
+                cidade: data.cidade || "",
+                bedrooms: data.bedrooms || 0,
+                bathrooms: data.bathrooms || 0,
+                area: data.area || 0,
+                type: data.type || "",
+                status: data.status || "indisponivel",
+                images: data.images || [],
+                featured: data.featured || false,
+                createdAt: data.createdAt || "",
+            } as PropertyFromDB;
+        });
+        setAllProperties(propertiesData)
+      } catch (error) {
+        console.error("Erro ao buscar imóveis:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchProperties()
+  }, [])
+
   const filteredProperties = useMemo(() => {
-    const filtered = allProperties.filter((property) => {
-      // Search filter
+    let filtered = allProperties.filter((property) => {
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase()
         if (
           !property.title.toLowerCase().includes(searchTerm) &&
-          !property.location.toLowerCase().includes(searchTerm)
+          !property.bairro.toLowerCase().includes(searchTerm) &&
+          !property.cidade?.toLowerCase().includes(searchTerm)
         ) {
           return false
         }
       }
 
-      // Type filter
-      if (filters.type && filters.type !== "all" && property.type !== filters.type) {
+      if (filters.type !== "all" && property.type.toLowerCase() !== filters.type) {
         return false
       }
 
-      // Bedrooms filter
-      if (filters.bedrooms && filters.bedrooms !== "any" && property.bedrooms < Number.parseInt(filters.bedrooms)) {
+      if (filters.location !== "all" && property.cidade?.toLowerCase() !== filters.location.toLowerCase()) {
         return false
-      }
-
-      // Bathrooms filter
-      if (filters.bathrooms && filters.bathrooms !== "any" && property.bathrooms < Number.parseInt(filters.bathrooms)) {
-        return false
-      }
-
-      // Price filter (simplified - in real app would need proper price parsing)
-      if (filters.minPrice || filters.maxPrice) {
-        const priceValue = Number.parseInt(property.price.replace(/[^\d]/g, ""))
-        if (filters.minPrice && priceValue < Number.parseInt(filters.minPrice)) {
-          return false
-        }
-        if (filters.maxPrice && priceValue > Number.parseInt(filters.maxPrice)) {
-          return false
-        }
       }
       
-      // FILTRO DE ÁREA ADICIONADO
-      if (filters.minArea && property.area < Number.parseInt(filters.minArea)) {
+      if (filters.bedrooms !== "any" && property.bedrooms < Number(filters.bedrooms)) {
+        return false
+      }
+
+      if (filters.bathrooms !== "any" && property.bathrooms < Number(filters.bathrooms)) {
+        return false
+      }
+
+      if (filters.minPrice || filters.maxPrice) {
+        const priceValue = parseFloat(String(property.price).replace(/[^0-9,-]+/g, "").replace(',', '.')) || 0;
+        if (filters.minPrice && priceValue < Number(filters.minPrice)) return false;
+        if (filters.maxPrice && priceValue > Number(filters.maxPrice)) return false;
+      }
+      
+      if (filters.minArea && property.area < Number(filters.minArea)) {
         return false
       }
 
       return true
     })
 
-    // Sort properties
-    switch (filters.sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => {
-          const priceA = Number.parseInt(a.price.replace(/[^\d]/g, ""))
-          const priceB = Number.parseInt(b.price.replace(/[^\d]/g, ""))
-          return priceA - priceB
-        })
-        break
-      case "price-high":
-        filtered.sort((a, b) => {
-          const priceA = Number.parseInt(a.price.replace(/[^\d]/g, ""))
-          const priceB = Number.parseInt(b.price.replace(/[^\d]/g, ""))
-          return priceB - priceA
-        })
-        break
-      case "area-large":
-        filtered.sort((a, b) => b.area - a.area)
-        break
-      case "area-small":
-        filtered.sort((a, b) => a.area - b.area)
-        break
-      default:
-        // newest - keep original order
-        break
-    }
+    return filtered.sort((a, b) => {
+        const priceA = parseFloat(String(a.price).replace(/[^0-9,-]+/g, "").replace(',', '.')) || 0;
+        const priceB = parseFloat(String(b.price).replace(/[^0-9,-]+/g, "").replace(',', '.')) || 0;
 
-    return filtered
-  }, [filters])
+        switch (filters.sortBy) {
+            case "price-low": return priceA - priceB;
+            case "price-high": return priceB - priceA;
+            case "area-large": return b.area - a.area;
+            case "area-small": return a.area - b.area;
+            case "newest":
+            default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+    });
+  }, [allProperties, filters])
 
   const totalPages = Math.ceil(filteredProperties.length / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
@@ -210,68 +156,63 @@ export default function ImoveisPage() {
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters)
-    setCurrentPage(1) // Reset to first page when filters change
+    setCurrentPage(1)
   }
+  
+  const adaptPropertyForCard = (property: PropertyFromDB): PropertyForCard => {
+    let statusForCard: PropertyForCard['status'] = "Vendido";
+    if (property.status === 'disponivel') {
+        statusForCard = property.price.toLowerCase().includes('mês') ? "Para Alugar" : "À Venda";
+    } else if (property.status === 'alugado') {
+        statusForCard = "Alugado";
+    }
+
+    return {
+      ...property,
+      location: property.bairro,
+      image: property.images?.[0] || '/placeholder.svg',
+      status: statusForCard,
+    };
+  };
 
   return (
     <div className="min-h-screen">
       <Header />
-
       <main className="container mx-auto px-4 py-8">
-        {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-secondary mb-4">Todos os Imóveis</h1>
           <p className="text-lg text-muted-foreground">
             Encontre o imóvel perfeito para você. {filteredProperties.length} imóveis encontrados.
           </p>
         </div>
-
-        {/* Filters */}
         <div className="mb-8">
           <PropertyFilters onFilterChange={handleFilterChange} />
         </div>
-
-        {/* Results */}
-        {paginatedProperties.length > 0 ? (
+        {isLoading ? (
+            <div className="flex justify-center items-center py-24">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
+        ) : paginatedProperties.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
               {paginatedProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+                <PropertyCard key={property.id} property={adaptPropertyForCard(property)} />
               ))}
             </div>
-
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  Anterior
+                <Button variant="outline" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
+                  <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
                 </Button>
-
                 <div className="flex items-center gap-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <Button
-                      key={page}
-                      variant={page === currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(page)}
-                    >
+                    <Button key={page} variant={page === currentPage ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(page)}>
                       {page}
                     </Button>
                   ))}
                 </div>
-
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Próxima
-                  <ChevronRight className="h-4 w-4 ml-2" />
+                <Button variant="outline" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>
+                  Próxima <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
             )}
@@ -283,15 +224,8 @@ export default function ImoveisPage() {
             <Button
               onClick={() =>
                 handleFilterChange({
-                  search: "",
-                  type: "",
-                  minPrice: "",
-                  maxPrice: "",
-                  location: "",
-                  bedrooms: "",
-                  bathrooms: "",
-                  minArea: "",
-                  sortBy: "newest",
+                  search: "", type: "all", minPrice: "", maxPrice: "", location: "all",
+                  bedrooms: "any", bathrooms: "any", minArea: "", sortBy: "newest",
                 })
               }
             >
@@ -300,7 +234,6 @@ export default function ImoveisPage() {
           </div>
         )}
       </main>
-
       <Footer />
     </div>
   )

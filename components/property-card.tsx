@@ -9,7 +9,7 @@ import { useState } from "react"
 import { NotificationToast } from "./notification-toast"
 
 interface Property {
-  id: number
+  id: string
   title: string
   price: string
   location: string

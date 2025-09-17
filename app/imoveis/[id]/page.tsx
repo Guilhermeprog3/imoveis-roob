@@ -1,7 +1,8 @@
+// app/imoveis/[id]/page.tsx
 "use client"
 
-import { useState } from "react"
-import { useParams, notFound } from "next/navigation" // Importe o notFound
+import { useState, useEffect } from "react"
+import { useParams, notFound } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { ImageGallery } from "@/components/image-gallery"
@@ -11,162 +12,134 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-  ArrowLeft,
-  Mail,
-  Share2,
-  Bed,
-  Bath,
-  Square,
-  Car,
-  Wifi,
-  Dumbbell,
-  Trees,
-  Shield,
-  Waves,
-  MapPin,
-  Calendar,
-  Eye,
-  MessageCircle,
+  ArrowLeft, Mail, Share2, Bed, Bath, Square, Car, Wifi, Dumbbell,
+  Trees, Shield, Waves, MapPin, Calendar, Eye, MessageCircle, Loader2
 } from "lucide-react"
 import Link from "next/link"
-import { brokers } from "@/lib/data" 
+import { db } from "@/firebase/config"
+import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 
-const propertyData = {
-  1: {
-    id: 1,
-    title: "Casa Moderna com Piscina",
-    price: "R$ 850.000",
-    location: "Jardim das Flores",
-    address: "Rua das Flores, 123 - Jardim das Flores, Teresina - PI",
-    bedrooms: 4,
-    bathrooms: 3,
-    area: 280,
-    garageSpaces: 2,
-    type: "Casa",
-    status: "À Venda",
-    views: 1247,
-    publishedDate: "2024-01-15",
-    description: `Esta magnífica casa moderna oferece o equilíbrio perfeito entre conforto e elegância. 
-    Localizada no prestigioso bairro Jardim das Flores em Teresina, a propriedade conta com acabamentos de primeira qualidade 
-    e um projeto arquitetônico contemporâneo que privilegia a integração entre os ambientes internos e externos.
-    
-    A casa possui amplos espaços sociais, cozinha gourmet totalmente equipada, suíte master com closet e hidromassagem, 
-    além de uma área de lazer completa com piscina, churrasqueira e jardim paisagístico. 
-    
-    Ideal para famílias que buscam qualidade de vida em um ambiente sofisticado e acolhedor no coração do Piauí.`,
-    features: [
-      { icon: Wifi, label: "Internet Fibra Ótica" },
-      { icon: Car, label: "2 Vagas de Garagem" },
-      { icon: Waves, label: "Piscina" },
-      { icon: Trees, label: "Jardim Paisagístico" },
-      { icon: Shield, label: "Portaria 24h" },
-      { icon: Dumbbell, label: "Área de Lazer" },
-    ],
-    images: [
-      "/modern-house-with-pool.png",
-      "/luxury-apartment-interior.png",
-      "/penthouse-city-view.png",
-      "/spacious-family-house.png",
-    ],
-    specifications: {
-      "Área Total": "280 m²",
-      "Área Construída": "220 m²",
-      Quartos: "4",
-      Suítes: "2",
-      Banheiros: "3",
-      Vagas: "2",
-      "Ano de Construção": "2020",
-      IPTU: "R$ 2.400/ano",
-      Condomínio: "R$ 450/mês",
-    },
-  },
-  2: {
-    id: 2,
-    title: "Apartamento Luxuoso Centro",
-    price: "R$ 450.000",
-    location: "Centro",
-    address: "Av. Getúlio Vargas, 456 - Centro, Timon - MA",
-    bedrooms: 3,
-    bathrooms: 2,
-    area: 120,
-    garageSpaces: 1,
-    type: "Apartamento",
-    status: "À Venda",
-    views: 892,
-    publishedDate: "2024-01-20",
-    description: `Apartamento luxuoso no coração de Timon, com vista panorâmica da cidade. 
-    Localizado em um dos edifícios mais modernos da região, oferece toda a comodidade urbana 
-    com fácil acesso a comércios, restaurantes e serviços.
-    
-    O imóvel conta com acabamentos premium, cozinha americana integrada, varanda gourmet 
-    e uma localização privilegiada no centro da cidade.`,
-    features: [
-      { icon: Wifi, label: "Internet Fibra Ótica" },
-      { icon: Car, label: "1 Vaga de Garagem" },
-      { icon: Shield, label: "Portaria 24h" },
-      { icon: Dumbbell, label: "Academia" },
-    ],
-    images: ["/luxury-apartment-interior.png", "/modern-compact-apartment.png", "/penthouse-city-view.png"],
-    specifications: {
-      "Área Total": "120 m²",
-      "Área Construída": "95 m²",
-      Quartos: "3",
-      Suítes: "1",
-      Banheiros: "2",
-      Vagas: "1",
-      "Ano de Construção": "2022",
-      IPTU: "R$ 1.200/ano",
-      Condomínio: "R$ 280/mês",
-    },
-  },
+// Interfaces para os dados
+interface Property {
+  id: string;
+  title: string;
+  price: string;
+  bairro: string;
+  cidade: string;
+  address?: string;
+  bedrooms: number;
+  suites: number;
+  closets: number;
+  bathrooms: number;
+  area: number;
+  garageSpaces: number;
+  type: string;
+  status: string;
+  createdAt: string;
+  description: string;
+  features: string[];
+  images: string[];
 }
+
+interface Broker {
+  id: string;
+  nome: string;
+  photo: string;
+  creci: string;
+  specialties: string[];
+  experience: string;
+  phone: string;
+  email: string;
+  whatsapp: string;
+}
+
+// Mapeamento de features (strings) para ícones (componentes)
+const featureIconMap: { [key: string]: React.ElementType } = {
+  "Internet Fibra Ótica": Wifi,
+  "Piscina": Waves,
+  "Jardim": Trees,
+  "Portaria 24h": Shield,
+  "Área de Lazer": Dumbbell,
+  "Academia": Dumbbell,
+  // Adicione outros mapeamentos conforme necessário
+};
 
 export default function PropertyDetailsPage() {
   const params = useParams()
   const propertyId = params.id as string
-  const property = propertyData[propertyId as unknown as keyof typeof propertyData]
+  
+  const [property, setProperty] = useState<Property | null>(null)
+  const [brokers, setBrokers] = useState<Broker[]>([])
+  const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const [selectedBrokerId, setSelectedBrokerId] = useState<string>(brokers[0].id)
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!propertyId) return
 
-  // AQUI ESTÁ A MUDANÇA PRINCIPAL
-  // Se a propriedade não for encontrada, chame a função notFound()
-  if (!property) {
-    notFound();
-  }
+      setIsLoading(true)
 
-  const currentBroker = brokers.find(b => b.id === selectedBrokerId)
+      // Buscar dados do imóvel
+      const propertyDocRef = doc(db, "imoveis", propertyId)
+      const propertyDocSnap = await getDoc(propertyDocRef)
 
-  if (!currentBroker) {
-    return <div>Corretor não encontrado.</div>; // Fallback
-  }
+      if (!propertyDocSnap.exists()) {
+        notFound() // Redireciona para a página 404 se o imóvel não existir
+        return
+      }
+      setProperty({ id: propertyDocSnap.id, ...propertyDocSnap.data() } as Property)
+
+      // Buscar dados dos corretores
+      const brokersQuerySnapshot = await getDocs(collection(db, "usuarios"))
+      const brokersData = brokersQuerySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Broker))
+      setBrokers(brokersData)
+      if (brokersData.length > 0) {
+        setSelectedBroker(brokersData[0])
+      }
+      
+      setIsLoading(false)
+    }
+
+    fetchData()
+  }, [propertyId])
 
   const handleWhatsAppContact = () => {
-    const message = `Olá ${currentBroker.name}! Tenho interesse no imóvel: ${property.title} (Ref: ${property.id}). Gostaria de mais informações.`
-    const whatsappUrl = `https://wa.me/${currentBroker.whatsapp}?text=${encodeURIComponent(message)}`
+    if (!property || !selectedBroker) return;
+    const message = `Olá ${selectedBroker.nome}! Tenho interesse no imóvel: ${property.title} (Ref: ${property.id}). Gostaria de mais informações.`
+    const whatsappUrl = `https://wa.me/${selectedBroker.whatsapp}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
   const handleEmailContact = () => {
+    if (!property || !selectedBroker) return;
     const subject = `Interesse no imóvel: ${property.title} (Ref: ${property.id})`
-    const body = `Olá ${currentBroker.name},\n\nTenho interesse no imóvel "${property.title}" e gostaria de mais informações.\n\nAguardo retorno.\n\nObrigado(a)!`
-    window.location.href = `mailto:${currentBroker.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    const body = `Olá ${selectedBroker.nome},\n\nTenho interesse no imóvel "${property.title}" e gostaria de mais informações.\n\nAguardo retorno.\n\nObrigado(a)!`
+    window.location.href = `mailto:${selectedBroker.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  }
+  
+  const handleShare = async () => {
+    if (!property) return;
+    if (navigator.share) {
+      await navigator.share({ title: property.title, text: `Confira este imóvel: ${property.title}`, url: window.location.href, });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copiado para a área de transferência!");
+    }
   }
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: property.title,
-          text: `Confira este imóvel: ${property.title}`,
-          url: window.location.href,
-        })
-      } catch (error) {
-        console.log("Error sharing:", error)
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-      alert("Link copiado para a área de transferência!")
-    }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!property) {
+    return null; // A função notFound() já terá sido chamada
   }
 
   return (
@@ -183,155 +156,101 @@ export default function PropertyDetailsPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             <ImageGallery images={property.images} title={property.title} />
             <div className="space-y-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Badge
-                      variant={property.status === "À Venda" ? "default" : "secondary"}
-                      className={property.status === "À Venda" ? "bg-primary" : "bg-accent"}
-                    >
-                      {property.status}
-                    </Badge>
+                    <Badge variant={property.status === "disponivel" ? "default" : "secondary"}>{property.status}</Badge>
                     <Badge variant="outline">{property.type}</Badge>
                   </div>
                   <h1 className="text-3xl font-bold text-secondary mb-2 text-balance">{property.title}</h1>
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <MapPin className="h-4 w-4" />
-                    <p>{property.location}</p>
+                    <p>{property.bairro}, {property.cidade}</p>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <Eye className="h-4 w-4" />
-                      <span>{property.views.toLocaleString()} visualizações</span>
-                    </div>
-                    <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>Publicado em {new Date(property.publishedDate).toLocaleDateString("pt-BR")}</span>
+                      <span>Publicado em {new Date(property.createdAt).toLocaleDateString("pt-BR")}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="icon" onClick={handleShare}>
-                    <Share2 className="h-4 w-4" />
-                  </Button>
+                  <Button variant="outline" size="icon" onClick={handleShare}><Share2 className="h-4 w-4" /></Button>
                 </div>
               </div>
               <div className="text-4xl font-bold text-primary">{property.price}</div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-muted-foreground pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <Bed className="h-5 w-5" />
-                    <span>{property.bedrooms} quartos</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Bath className="h-5 w-5" />
-                    <span>{property.bathrooms} banheiros</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Square className="h-5 w-5" />
-                    <span>{property.area}m²</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Car className="h-5 w-5" />
-                    <span>{property.garageSpaces} vagas</span>
-                  </div>
-                  {property.features.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <feature.icon className="h-5 w-5" />
-                      <span className="text-sm">{feature.label}</span>
-                    </div>
-                  ))}
+                  <div className="flex items-center gap-2"><Bed className="h-5 w-5" /><span>{property.bedrooms} quartos</span></div>
+                  <div className="flex items-center gap-2"><Bath className="h-5 w-5" /><span>{property.bathrooms} banheiros</span></div>
+                  <div className="flex items-center gap-2"><Square className="h-5 w-5" /><span>{property.area}m²</span></div>
+                  <div className="flex items-center gap-2"><Car className="h-5 w-5" /><span>{property.garageSpaces} vagas</span></div>
+                  {property.features.map((feature, index) => {
+                    const Icon = featureIconMap[feature] || null;
+                    return (
+                      <div key={index} className="flex items-center gap-2">
+                        {Icon && <Icon className="h-5 w-5" />}
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    )
+                  })}
               </div>
               <Separator />
               <div>
                 <h2 className="text-2xl font-semibold text-secondary mb-4">Descrição</h2>
                 <div className="prose prose-gray max-w-none">
                   {property.description.split("\n").map((paragraph, index) => (
-                    <p key={index} className="mb-4 text-muted-foreground leading-relaxed">
-                      {paragraph.trim()}
-                    </p>
+                    <p key={index} className="mb-4 text-muted-foreground leading-relaxed">{paragraph.trim()}</p>
                   ))}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-center">Escolha seu Corretor</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-center">Fale com um Corretor</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   {brokers.map(broker => (
-                     <Button
-                       key={broker.id}
-                       variant={selectedBrokerId === broker.id ? "default" : "outline"}
-                       onClick={() => setSelectedBrokerId(broker.id)}
-                       className="text-sm"
-                     >
-                       {broker.name.split(" ")[0]}
+                     <Button key={broker.id} variant={selectedBroker?.id === broker.id ? "default" : "outline"} onClick={() => setSelectedBroker(broker)} className="text-sm">
+                       {broker.nome.split(" ")[0]}
                      </Button>
                   ))}
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={currentBroker.photo || "/placeholder.svg"} alt={currentBroker.name} />
-                    <AvatarFallback>
-                      {currentBroker.name.split(" ").map((n) => n[0]).join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{currentBroker.name}</h3>
-                    <p className="text-sm text-primary font-medium">{currentBroker.creci}</p>
-                    <p className="text-xs text-muted-foreground">{currentBroker.experience}</p>
-                    <div className="flex gap-1 mt-1">
-                      {currentBroker.specialties.map((specialty, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {specialty}
-                        </Badge>
-                      ))}
+                {selectedBroker && (
+                  <>
+                    <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={selectedBroker.photo || "/placeholder-user.jpg"} alt={selectedBroker.nome} />
+                        <AvatarFallback>{selectedBroker.nome.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg">{selectedBroker.nome}</h3>
+                        <p className="text-sm text-primary font-medium">{selectedBroker.creci}</p>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <Button onClick={handleWhatsAppContact} className="w-full" size="lg">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  WhatsApp
-                </Button>
-                <Button onClick={handleEmailContact} variant="outline" className="w-full bg-transparent" size="lg">
-                  <Mail className="h-4 w-4 mr-2" />
-                  E-mail
-                </Button>
-                <div className="text-center text-sm text-muted-foreground">
-                  <p>{currentBroker.phone}</p>
-                  <p>{currentBroker.email}</p>
-                </div>
+                    <Button onClick={handleWhatsAppContact} className="w-full" size="lg"><MessageCircle className="h-4 w-4 mr-2" />WhatsApp</Button>
+                    <Button onClick={handleEmailContact} variant="outline" className="w-full bg-transparent" size="lg"><Mail className="h-4 w-4 mr-2" />E-mail</Button>
+                    <div className="text-center text-sm text-muted-foreground">
+                      <p>{selectedBroker.phone}</p>
+                      <p>{selectedBroker.email}</p>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card>
-              <CardHeader>
-                <CardTitle>Especificações</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Especificações</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {Object.entries(property.specifications).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-muted-foreground">{key}:</span>
-                      <span className="font-medium">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Referência do Imóvel</p>
-                  <p className="text-lg font-bold text-primary">#{property.id.toString().padStart(6, "0")}</p>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Área:</span><span className="font-medium">{property.area} m²</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Quartos:</span><span className="font-medium">{property.bedrooms}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Suítes:</span><span className="font-medium">{property.suites}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Banheiros:</span><span className="font-medium">{property.bathrooms}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Vagas:</span><span className="font-medium">{property.garageSpaces}</span></div>
                 </div>
               </CardContent>
             </Card>
