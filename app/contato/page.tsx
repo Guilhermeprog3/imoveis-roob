@@ -1,6 +1,5 @@
 // app/contato/page.tsx
 "use client"
-
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
@@ -12,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Phone, Mail, Clock, MessageSquare, Send, Award, Facebook, Instagram, Loader2 } from "lucide-react"
 import { NotificationToast } from "@/components/notification-toast"
 import { db } from "@/firebase/config"
-import { collection, getDocs } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 
 interface Broker {
   id: string;
@@ -49,7 +48,8 @@ export default function ContatoPage() {
     const fetchBrokers = async () => {
       setIsLoadingBrokers(true)
       try {
-        const querySnapshot = await getDocs(collection(db, "usuarios"))
+        const q = query(collection(db, "usuarios"), where("visibility.isPublic", "==", true));
+        const querySnapshot = await getDocs(q);
         const brokersData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()

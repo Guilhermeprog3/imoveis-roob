@@ -1,10 +1,10 @@
+// components/footer.tsx
 "use client"
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Home, Phone, Facebook, Instagram, Loader2 } from "lucide-react";
 import { db } from "@/firebase/config";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 interface Broker {
   id: string;
@@ -25,7 +25,8 @@ export function Footer() {
     const fetchBrokers = async () => {
       setIsLoading(true);
       try {
-        const querySnapshot = await getDocs(collection(db, "usuarios"));
+        const q = query(collection(db, "usuarios"), where("visibility.isPublic", "==", true));
+        const querySnapshot = await getDocs(q);
         const brokersData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight, X, Expand } from "lucide-react"
 
 interface ImageGalleryProps {
@@ -66,6 +66,13 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-7xl w-full h-full max-h-screen p-0">
+             {/* INÍCIO DA CORREÇÃO DE ACESSIBILIDADE */}
+            <DialogHeader className="sr-only">
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>Imagem do imóvel em tela cheia. Foto {currentImage + 1} de {images.length}.</DialogDescription>
+            </DialogHeader>
+            {/* FIM DA CORREÇÃO DE ACESSIBILIDADE */}
+
             <div className="relative w-full h-full bg-black">
               <img
                 src={images[currentImage] || "/placeholder.svg?height=800&width=1200"}

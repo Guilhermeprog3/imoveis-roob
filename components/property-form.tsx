@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { X, Plus, Upload, ImageIcon, Building, MapPin, DollarSign, Bed, Bath, Square, Car } from "lucide-react"
-import { Separator } from "@radix-ui/react-separator"
+import { X, Plus, Upload, Building, MapPin, DollarSign, Bed } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+
 
 // Interface atualizada com suites e closets
 interface PropertyFormData {
@@ -84,8 +85,8 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
     bairro: initialData?.bairro || "",
     cidade: initialData?.cidade || "",
     bedrooms: initialData?.bedrooms || 0,
-    suites: initialData?.suites || 0, // Novo campo
-    closets: initialData?.closets || 0, // Novo campo
+    suites: initialData?.suites || 0,
+    closets: initialData?.closets || 0,
     bathrooms: initialData?.bathrooms || 0,
     area: initialData?.area || 0,
     garageSpaces: initialData?.garageSpaces || 0,
@@ -182,7 +183,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Título do Anúncio *</Label>
+            <Label htmlFor="title">Título do Anúncio <span className="text-red-500">*</span></Label>
             <Input
               id="title"
               value={formData.title}
@@ -192,7 +193,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição Completa *</Label>
+            <Label htmlFor="description">Descrição Completa <span className="text-red-500">*</span></Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -217,14 +218,14 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
           <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="type">Tipo de Imóvel *</Label>
+                    <Label htmlFor="type">Tipo de Imóvel <span className="text-red-500">*</span></Label>
                     <Select value={formData.type} onValueChange={(value) => handleInputChange("type", value)}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>{propertyTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="status">Status *</Label>
+                    <Label htmlFor="status">Status <span className="text-red-500">*</span></Label>
                     <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>{statusOptions.map(status => <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>)}</SelectContent>
@@ -232,8 +233,8 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
                 </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Preço *</Label>
-              <Input id="price" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="Ex: R$ 850.000 ou R$ 3.500/mês" required />
+              <Label htmlFor="price">Preço</Label>
+              <Input id="price" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="Ex: R$ 850.000 ou R$ 3.500/mês" />
             </div>
             <div className="flex items-center space-x-2 pt-2">
               <Checkbox id="featured" checked={formData.featured} onCheckedChange={(checked) => handleInputChange("featured", checked)} />
@@ -251,7 +252,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
           </CardHeader>
           <CardContent className="space-y-6">
              <div className="space-y-2">
-                <Label htmlFor="cidade">Cidade *</Label>
+                <Label htmlFor="cidade">Cidade <span className="text-red-500">*</span></Label>
                 <Select value={formData.cidade} onValueChange={(value) => handleInputChange("cidade", value)}>
                     <SelectTrigger>
                         <SelectValue placeholder="Selecione a cidade" />
@@ -266,8 +267,8 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bairro">Bairro *</Label>
-                <Input id="bairro" value={formData.bairro} onChange={(e) => handleInputChange("bairro", e.target.value)} placeholder="Ex: Jardim das Flores" required />
+                <Label htmlFor="bairro">Bairro</Label>
+                <Input id="bairro" value={formData.bairro} onChange={(e) => handleInputChange("bairro", e.target.value)} placeholder="Ex: Jardim das Flores" />
               </div>
           </CardContent>
         </Card>

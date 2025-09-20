@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/firebase/config"
-import { doc, getDoc, collection, getDocs } from "firebase/firestore"
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore"
 
 // Interfaces para os dados
 interface Property {
@@ -53,7 +53,6 @@ interface Broker {
   whatsapp: string;
 }
 
-// Mapeamento de features (strings) para ícones (componentes)
 const featureIconMap: { [key: string]: React.ElementType } = {
   "Internet Fibra Ótica": Wifi,
   "Piscina": Waves,
@@ -61,7 +60,6 @@ const featureIconMap: { [key: string]: React.ElementType } = {
   "Portaria 24h": Shield,
   "Área de Lazer": Dumbbell,
   "Academia": Dumbbell,
-  // Adicione outros mapeamentos conforme necessário
 };
 
 export default function PropertyDetailsPage() {
@@ -79,18 +77,17 @@ export default function PropertyDetailsPage() {
 
       setIsLoading(true)
 
-      // Buscar dados do imóvel
       const propertyDocRef = doc(db, "imoveis", propertyId)
       const propertyDocSnap = await getDoc(propertyDocRef)
 
       if (!propertyDocSnap.exists()) {
-        notFound() // Redireciona para a página 404 se o imóvel não existir
+        notFound()
         return
       }
       setProperty({ id: propertyDocSnap.id, ...propertyDocSnap.data() } as Property)
 
-      // Buscar dados dos corretores
-      const brokersQuerySnapshot = await getDocs(collection(db, "usuarios"))
+      const brokersQuery = query(collection(db, "usuarios"), where("visibility.isPublic", "==", true));
+      const brokersQuerySnapshot = await getDocs(brokersQuery);
       const brokersData = brokersQuerySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -139,7 +136,7 @@ export default function PropertyDetailsPage() {
   }
 
   if (!property) {
-    return null; // A função notFound() já terá sido chamada
+    return null; 
   }
 
   return (

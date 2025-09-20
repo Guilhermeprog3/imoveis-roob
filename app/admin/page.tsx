@@ -1,3 +1,4 @@
+// app/admin/page.tsx
 "use client"
 
 import { useEffect, useState } from "react";
@@ -6,7 +7,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Home, LogOut, Plus, Building, Eye, DollarSign, Settings, EyeOff } from "lucide-react"
+import { Home, LogOut, Plus, Building, Eye, DollarSign, Settings, EyeOff, User } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/firebase/config";
 import { collection, getDocs, query, limit, orderBy } from "firebase/firestore";
@@ -159,6 +160,12 @@ function AdminDashboard() {
                 <Link href="/admin/imoveis">
                   <Building className="h-4 w-4 mr-2" />
                   Gerenciar Imóveis
+                </Link>
+              </Button>
+               <Button variant="outline" className="w-full justify-start bg-transparent" size="lg" asChild>
+                <Link href="/admin/editar-perfil">
+                    <User className="h-4 w-4 mr-2" />
+                    Editar Perfil
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start bg-transparent" size="lg" asChild>
