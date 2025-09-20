@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator"
 
 
 // Interface atualizada com suites e closets
-interface PropertyFormData {
+export interface PropertyFormData {
   title: string
   description: string
   price: string
