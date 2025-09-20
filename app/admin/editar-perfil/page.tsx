@@ -11,6 +11,7 @@ import { User, Link as LinkIcon, Camera, Loader2 } from "lucide-react"
 import { db } from "@/firebase/config"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { AdminNavbar } from "@/components/admin-navbar"
+import { NotificationToast } from "@/components/notification-toast"
 
 const formatPhone = (value: string) => {
   if (!value) return ""
@@ -28,6 +29,7 @@ const formatCreci = (value: string) => {
   }
   return cleaned;
 }
+
 interface BrokerFormData {
     nome: string;
     creci: string;
@@ -44,33 +46,40 @@ function EditarPerfilPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
+  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchBrokerData = async () => {
-      if (user) {
-        try {
-          const docRef = doc(db, "usuarios", user.uid)
-          const docSnap = await getDoc(docRef)
-          if (docSnap.exists()) {
-            const data = docSnap.data()
-            setFormData({
-                ...data,
-                phone: data.phone ? formatPhone(data.phone) : '',
-                creci: data.creci ? formatCreci(data.creci) : ''
-            } as BrokerFormData)
-          } else {
-            console.log("Nenhum documento de usuário encontrado!");
-          }
-        } catch (error) {
-            console.error("Erro ao buscar dados do perfil:", error);
-        } finally {
-            setIsFetching(false);
+    if (user && !initialDataLoaded) {
+        const fetchBrokerData = async () => {
+            try {
+              const docRef = doc(db, "usuarios", user.uid)
+              const docSnap = await getDoc(docRef)
+              if (docSnap.exists()) {
+                const data = docSnap.data()
+                setFormData({
+                    ...data,
+                    phone: data.phone ? formatPhone(data.phone) : '',
+                    creci: data.creci ? formatCreci(data.creci) : ''
+                } as BrokerFormData)
+              } else {
+                console.log("Nenhum documento de usuário encontrado!");
+              }
+            } catch (error) {
+                console.error("Erro ao buscar dados do perfil:", error);
+                setMessage({ type: 'error', text: "Não foi possível carregar os dados do perfil." });
+            } finally {
+                setIsFetching(false);
+                setInitialDataLoaded(true);
+            }
         }
-      }
+        fetchBrokerData()
+    } else if (!user) {
+        setIsFetching(true);
     }
-    fetchBrokerData()
-  }, [user])
+  }, [user, initialDataLoaded])
 
   const handleInputChange = (field: keyof BrokerFormData, value: any) => {
     let formattedValue = value;
@@ -101,16 +110,22 @@ function EditarPerfilPage() {
     if (!user || !formData) return
 
     setIsLoading(true)
+    setMessage(null)
+    
     try {
       const userDocRef = doc(db, "usuarios", user.uid)
-      await updateDoc(userDocRef, {
-        ...formData,
-        email: user.email 
-      })
-      alert("Dados salvos com sucesso!")
+      
+      const dataToUpdate = {
+          ...formData,
+          phone: formData.phone.replace(/\D/g, ''),
+          creci: formData.creci
+      };
+
+      await updateDoc(userDocRef, dataToUpdate)
+      setMessage({ type: 'success', text: "Dados salvos com sucesso!" });
     } catch (error) {
       console.error("Erro ao salvar dados:", error)
-      alert("Falha ao salvar as alterações.")
+      setMessage({ type: 'error', text: "Falha ao salvar as alterações." });
     } finally {
       setIsLoading(false)
     }
@@ -124,11 +139,20 @@ function EditarPerfilPage() {
     <div className="min-h-screen bg-background">
       <AdminNavbar />
 
+      {message && (
+        <NotificationToast
+            message={message.text}
+            type={message.type as "success" | "error" | "info"}
+            onClose={() => setMessage(null)}
+        />
+      )}
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-secondary mb-2">Editar Perfil</h1>
           <p className="text-muted-foreground">Gerencie suas informações pessoais e de contato.</p>
         </div>
+
 
         <form onSubmit={handleSaveChanges}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -208,7 +232,7 @@ function EditarPerfilPage() {
 
               <div className="flex justify-end">
                 <Button type="submit" size="lg" disabled={isLoading || isUploading}>
-                  {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                  {isLoading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Salvando...</> : 'Salvar Alterações'}
                 </Button>
               </div>
             </div>

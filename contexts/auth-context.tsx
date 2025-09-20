@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: "Falha ao enviar e-mail de recuperação." };
     }
   }
-  
+
   const updateUserPassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
     const currentUser = auth.currentUser;
     if (!currentUser || !currentUser.email) {
@@ -151,10 +151,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
       await reauthenticateWithCredential(currentUser, credential);
+      
       await updatePassword(currentUser, newPassword);
+      
       return { success: true };
     } catch (error: any) {
-      console.error("Erro ao atualizar senha:", error);
       if (error.code === 'auth/wrong-password') {
         return { success: false, error: "A senha atual está incorreta." };
       }
@@ -173,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
         const userDocRef = doc(db, "usuarios", currentUser.uid);
         await updateDoc(userDocRef, { "visibility.isPublic": false });
+        
         await logout();
         
         return { success: true };

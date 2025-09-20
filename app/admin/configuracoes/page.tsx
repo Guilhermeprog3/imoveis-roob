@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, Loader2, Shield, Eye } from "lucide-react"
+import { Trash2, Loader2, Shield, Eye, EyeOff } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,11 +18,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { db } from "@/firebase/config"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
-import { AdminNavbar } from "@/components/admin-navbar";
+import { AdminNavbar } from "@/components/admin-navbar"
+import { NotificationToast } from "@/components/notification-toast"
 
 interface UserSettings {
     visibility: {
@@ -36,34 +36,42 @@ function ConfiguracoesPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [isFetching, setIsFetching] = useState(true);
 
   const [actionLoading, setActionLoading] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [message, setMessage] = useState<{type: 'success' | 'error' | 'info', text: string} | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (user) {
-        try {
-          const docRef = doc(db, "usuarios", user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setSettings({
-              visibility: data.visibility ? { isPublic: data.visibility.isPublic } : { isPublic: true },
-            });
-          }
-        } catch (error) {
-          console.error("Erro ao buscar dados do usuário:", error);
-          setMessage({ type: 'error', text: "Não foi possível carregar as configurações." });
-        } finally {
-          setIsFetching(false);
+      if (!user) {
+        setIsFetching(false);
+        return;
+      }
+      
+      try {
+        const docRef = doc(db, "usuarios", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setSettings({
+            visibility: data.visibility ? { isPublic: data.visibility.isPublic } : { isPublic: true },
+          });
         }
+      } catch (error) {
+        console.error("Erro ao carregar configurações:", error);
+        setMessage({ type: 'error', text: "Não foi possível carregar as configurações." });
+      } finally {
+        setIsFetching(false);
       }
     };
+    
     fetchUserData();
   }, [user]);
 
@@ -95,7 +103,9 @@ function ConfiguracoesPage() {
     setActionLoading(true);
     setMessage(null);
     const result = await deactivateCurrentUser();
-    if (!result.success) {
+    if (result.success) {
+        setMessage({ type: 'info', text: "Conta desativada. Você foi desconectado." });
+    } else {
       setMessage({ type: 'error', text: result.error || "Ocorreu um erro ao desativar a conta." });
       setActionLoading(false);
     }
@@ -157,6 +167,14 @@ function ConfiguracoesPage() {
   return (
     <div className="min-h-screen bg-background">
       <AdminNavbar />
+      
+      {message && (
+        <NotificationToast
+            message={message.text}
+            type={message.type}
+            onClose={() => setMessage(null)}
+        />
+      )}
 
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -171,12 +189,6 @@ function ConfiguracoesPage() {
         </div>
 
         <div className="max-w-3xl mx-auto space-y-8">
-            {message && (
-                <Alert variant={message.type === 'error' ? 'destructive' : 'default'} className="transition-all">
-                    <AlertDescription>{message.text}</AlertDescription>
-                </Alert>
-            )}
-
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5" /> Segurança da Conta</CardTitle>
@@ -186,15 +198,30 @@ function ConfiguracoesPage() {
                     <form onSubmit={handlePasswordChange} className="space-y-4">
                         <div className="space-y-1">
                             <Label htmlFor="currentPassword">Senha atual</Label>
-                            <Input id="currentPassword" type="password" placeholder="Digite sua senha atual" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+                            <div className="relative">
+                                <Input id="currentPassword" type={showCurrentPassword ? "text" : "password"} placeholder="Digite sua senha atual" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+                                <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => setShowCurrentPassword(!showCurrentPassword)}>
+                                    {showCurrentPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4" />}
+                                </Button>
+                            </div>
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="newPassword">Nova senha</Label>
-                            <Input id="newPassword" type="password" placeholder="Digite a nova senha" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                             <div className="relative">
+                                <Input id="newPassword" type={showNewPassword ? "text" : "password"} placeholder="Digite a nova senha" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                                <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => setShowNewPassword(!showNewPassword)}>
+                                    {showNewPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4" />}
+                                </Button>
+                            </div>
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-                            <Input id="confirmPassword" type="password" placeholder="Confirme a nova senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                            <div className="relative">
+                                <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Confirme a nova senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                                <Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                                    {showConfirmPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4" />}
+                                </Button>
+                            </div>
                         </div>
                         <Button type="submit" disabled={actionLoading}>
                              {actionLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -248,7 +275,8 @@ function ConfiguracoesPage() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeactivateAccount}>
+                                <AlertDialogAction onClick={handleDeactivateAccount} disabled={actionLoading}>
+                                    {actionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                                     Sim, desativar
                                 </AlertDialogAction>
                                 </AlertDialogFooter>
