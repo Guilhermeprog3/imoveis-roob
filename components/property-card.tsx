@@ -50,7 +50,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
         console.log("Error sharing:", error)
       }
     } else {
-      // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(shareData.url)
         setNotification({ message: "Link copiado para área de transferência", type: "success" })

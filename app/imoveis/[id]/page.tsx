@@ -1,4 +1,3 @@
-// app/imoveis/[id]/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -14,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   ArrowLeft, Mail, Share2, Bed, Bath, Square, Car, Wifi, Dumbbell,
   Trees, Shield, Waves, MapPin, Calendar, MessageCircle, Loader2,
-  Info // <<-- Ícone adicionado
+  Info
 } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/firebase/config"
@@ -28,18 +27,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 
-// Para os ícones de redes sociais (exemplo de importação):
-// import { SiInstagram, SiFacebook } from "simple-icons-react";
-// Como não posso adicionar a dependência, usarei placeholders.
-const IconInstagram = ({ className }: { className?: string }) => (
-  <svg className={className}>{/* SVG do Instagram aqui */}</svg>
-);
-const IconFacebook = ({ className }: { className?: string }) => (
-  <svg className={className}>{/* SVG do Facebook aqui */}</svg>
-);
 
 
-// Interfaces para os dados
+
 interface Property {
   id: string;
   title: string;
@@ -61,7 +51,6 @@ interface Property {
   images: string[];
 }
 
-// <<-- INTERFACE ATUALIZADA -->>
 interface Broker {
   id: string;
   nome: string;
@@ -72,8 +61,8 @@ interface Broker {
   phone: string;
   email: string;
   whatsapp: string;
-  instagram?: string; // <-- Novo campo opcional
-  facebook?: string;  // <-- Novo campo opcional
+  instagram?: string;
+  facebook?: string;
 }
 
 const featureIconMap: { [key: string]: React.ElementType } = {
@@ -137,7 +126,6 @@ export default function PropertyDetailsPage() {
     fetchData()
   }, [propertyId])
 
-  // Funções de handle...
   const handleWhatsAppContact = () => {
     if (!property || !selectedBroker) return;
     const message = `Olá ${selectedBroker.nome}! Tenho interesse no imóvel: ${property.title} (Ref: ${property.id}). Gostaria de mais informações.`
@@ -178,7 +166,6 @@ export default function PropertyDetailsPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="container mx-auto px-4 py-8 flex-grow">
-        {/* ... (código do imóvel, sem alterações) ... */}
         <div className="mb-6">
           <Button variant="outline" asChild>
             <Link href="/imoveis">
@@ -255,7 +242,6 @@ export default function PropertyDetailsPage() {
                 </div>
                 {selectedBroker && (
                   <>
-                    {/* <<-- SEÇÃO DO CORRETOR MODIFICADA -->> */}
                     <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
                       <Avatar className="h-16 w-16">
                         <AvatarImage src={selectedBroker.photo || "/placeholder-user.jpg"} alt={selectedBroker.nome} />
@@ -265,31 +251,11 @@ export default function PropertyDetailsPage() {
                         <h3 className="font-semibold text-lg">{selectedBroker.nome}</h3>
                         <p className="text-sm text-primary font-medium">{selectedBroker.creci}</p>
                       </div>
-                      {/* Botões de Redes Sociais */}
-                      <div className="flex flex-col gap-1">
-                        {selectedBroker.instagram && (
-                          <Button asChild variant="ghost" size="icon" className="h-7 w-7">
-                            <Link href={selectedBroker.instagram} target="_blank" aria-label="Instagram">
-                              {/* Substitua IconInstagram pelo seu componente de ícone real, ex: <SiInstagram /> */}
-                              <IconInstagram className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        )}
-                        {selectedBroker.facebook && (
-                          <Button asChild variant="ghost" size="icon" className="h-7 w-7">
-                            <Link href={selectedBroker.facebook} target="_blank" aria-label="Facebook">
-                               {/* Substitua IconFacebook pelo seu componente de ícone real, ex: <SiFacebook /> */}
-                              <IconFacebook className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                        )}
-                      </div>
                     </div>
                     
                     <Button onClick={handleWhatsAppContact} className="w-full" size="lg"><MessageCircle className="h-4 w-4 mr-2" />WhatsApp</Button>
                     <Button onClick={handleEmailContact} variant="outline" className="w-full bg-transparent" size="lg"><Mail className="h-4 w-4 mr-2" />E-mail</Button>
                     
-                    {/* Novo Botão "Ver Detalhes" */}
                     <Button asChild variant="secondary" className="w-full" size="lg">
                       <Link href="/contato">
                           <Info className="h-4 w-4 mr-2" />
@@ -301,7 +267,6 @@ export default function PropertyDetailsPage() {
                 )}
               </CardContent>
             </Card>
-            {/* ... (Card de Especificações, sem alterações) ... */}
             <Card>
               <CardHeader><CardTitle>Especificações</CardTitle></CardHeader>
               <CardContent>
@@ -316,8 +281,7 @@ export default function PropertyDetailsPage() {
             </Card>
           </div>
         </div>
-        
-        {/* ... (Carrossel, sem alterações) ... */}
+
         {relatedProperties.length > 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-semibold text-secondary mb-6">Imóveis Semelhantes em {property.cidade}</h2>

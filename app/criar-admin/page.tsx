@@ -6,15 +6,15 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Home, LogOut, ArrowLeft, UserPlus, Loader2 } from "lucide-react"
+import { ArrowLeft, UserPlus, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { AdminNavbar } from "@/components/admin-navbar";
 
 function CreateAdminPage() {
-  const { user, logout, signUp } = useAuth()
+  const { signUp } = useAuth()
   const router = useRouter()
   
   const [name, setName] = useState("")
@@ -51,32 +51,7 @@ function CreateAdminPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-secondary text-secondary-foreground shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-2 hover:text-primary transition-colors">
-                <Home className="h-6 w-6" />
-                <span className="text-xl font-bold">GR Imóveis</span>
-              </Link>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
-                Admin
-              </Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/admin" className="hover:text-primary transition-colors">
-                Dashboard
-              </Link>
-              <span className="text-sm">Olá, {user?.name}</span>
-              <Button variant="outline" size="sm" onClick={logout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminNavbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
@@ -162,6 +137,8 @@ function CreateAdminPage() {
 
 export default function CreateAdminPageWrapper() {
   return (
+    <ProtectedRoute>
       <CreateAdminPage />
+    </ProtectedRoute>
   )
 }

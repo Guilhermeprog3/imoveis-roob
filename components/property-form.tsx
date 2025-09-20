@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,19 +13,31 @@ import { Badge } from "@/components/ui/badge"
 import { X, Plus, Upload, Building, MapPin, DollarSign, Bed } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
+const formatCurrency = (value: string) => {
+  if (!value) return ""
+  let numberValue = parseInt(value.replace(/[^0-9]/g, ''), 10)
+  if (isNaN(numberValue)) return ""
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numberValue / 100)
+}
 
-// Interface atualizada com suites e closets
+const formatArea = (value: string) => {
+  if (!value) return ""
+  const numberValue = value.replace(/[^0-9]/g, '')
+  return numberValue ? `${numberValue} m²` : ""
+}
+
 export interface PropertyFormData {
   title: string
   description: string
   price: string
   bairro: string
-  cidade: string
+  cidade: string;
+  outraCidade?: string;
   bedrooms: number
-  suites: number // Novo campo
-  closets: number // Novo campo
+  suites: number
+  closets: number
   bathrooms: number
-  area: number
+  area: string
   garageSpaces: number
   type: string
   status: string
@@ -60,6 +71,12 @@ const statusOptions = [
 const cityOptions = [
     { value: "Teresina", label: "Teresina" },
     { value: "Timon", label: "Timon" },
+    { value: "Caxias", label: "Caxias" },
+    { value: "Campo Maior", label: "Campo Maior" },
+    { value: "Altos", label: "Altos" },
+    { value: "Parnaíba", label: "Parnaíba" },
+    { value: "São Luís", label: "São Luís" },
+    { value: "Outra", label: "Outra" },
 ]
 
 const availableFeatures = [
@@ -81,14 +98,15 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
   const [formData, setFormData] = useState<PropertyFormData>({
     title: initialData?.title || "",
     description: initialData?.description || "",
-    price: initialData?.price || "",
+    price: initialData?.price ? formatCurrency(initialData.price) : "",
     bairro: initialData?.bairro || "",
     cidade: initialData?.cidade || "",
+    outraCidade: initialData?.outraCidade || "",
     bedrooms: initialData?.bedrooms || 0,
     suites: initialData?.suites || 0,
     closets: initialData?.closets || 0,
     bathrooms: initialData?.bathrooms || 0,
-    area: initialData?.area || 0,
+    area: initialData?.area ? formatArea(String(initialData.area)) : "",
     garageSpaces: initialData?.garageSpaces || 0,
     type: initialData?.type || "",
     status: initialData?.status || "disponivel",
@@ -102,8 +120,26 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleInputChange = (field: keyof PropertyFormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    let formattedValue = value
+
+    if (field === 'price') {
+      formattedValue = formatCurrency(value)
+    } else if (field === 'area') {
+        formattedValue = formatArea(value)
+    }
+
+    setFormData((prev) => ({ ...prev, [field]: formattedValue }))
   }
+
+  const handleNumericInputChange = (field: keyof PropertyFormData, value: string) => {
+    const numericValue = parseInt(value, 10);
+    if (!isNaN(numericValue) && numericValue >= 0) {
+      setFormData((prev) => ({...prev, [field]: numericValue}));
+    } else if (value === "") {
+      setFormData((prev) => ({...prev, [field]: 0}));
+    }
+  };
+
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
@@ -172,7 +208,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* CARD DE INFORMAÇÕES PRINCIPAIS */}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -206,7 +241,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
         </CardContent>
       </Card>
 
-      {/* CARD DE DETALHES E LOCALIZAÇÃO */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="shadow-lg">
           <CardHeader>
@@ -234,7 +268,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Preço</Label>
-              <Input id="price" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="Ex: R$ 850.000 ou R$ 3.500/mês" />
+              <Input id="price" value={formData.price} onChange={(e) => handleInputChange("price", e.target.value)} placeholder="R$ 0,00" />
             </div>
             <div className="flex items-center space-x-2 pt-2">
               <Checkbox id="featured" checked={formData.featured} onCheckedChange={(checked) => handleInputChange("featured", checked)} />
@@ -266,6 +300,12 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
                     </SelectContent>
                 </Select>
               </div>
+              {formData.cidade === 'Outra' && (
+                <div className="space-y-2">
+                  <Label htmlFor="outraCidade">Qual cidade?</Label>
+                  <Input id="outraCidade" value={formData.outraCidade} onChange={(e) => handleInputChange("outraCidade", e.target.value)} placeholder="Digite o nome da cidade" />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="bairro">Bairro</Label>
                 <Input id="bairro" value={formData.bairro} onChange={(e) => handleInputChange("bairro", e.target.value)} placeholder="Ex: Jardim das Flores" />
@@ -274,7 +314,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
         </Card>
       </div>
 
-      {/* CARD DE ESPECIFICAÇÕES */}
       <Card className="shadow-lg">
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -285,32 +324,31 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
         <CardContent className="grid grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-2">
                 <Label htmlFor="bedrooms">Quartos</Label>
-                <Input id="bedrooms" type="number" min="0" value={formData.bedrooms} onChange={(e) => handleInputChange("bedrooms", Number.parseInt(e.target.value || '0'))} />
+                <Input id="bedrooms" type="number" min="0" value={formData.bedrooms} onChange={(e) => handleNumericInputChange("bedrooms", e.target.value)} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="suites">Suítes</Label>
-                <Input id="suites" type="number" min="0" value={formData.suites} onChange={(e) => handleInputChange("suites", Number.parseInt(e.target.value || '0'))} />
+                <Input id="suites" type="number" min="0" value={formData.suites} onChange={(e) => handleNumericInputChange("suites", e.target.value)} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="closets">Closets</Label>
-                <Input id="closets" type="number" min="0" value={formData.closets} onChange={(e) => handleInputChange("closets", Number.parseInt(e.target.value || '0'))} />
+                <Input id="closets" type="number" min="0" value={formData.closets} onChange={(e) => handleNumericInputChange("closets", e.target.value)} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="bathrooms">Banheiros</Label>
-                <Input id="bathrooms" type="number" min="0" value={formData.bathrooms} onChange={(e) => handleInputChange("bathrooms", Number.parseInt(e.target.value || '0'))} />
+                <Input id="bathrooms" type="number" min="0" value={formData.bathrooms} onChange={(e) => handleNumericInputChange("bathrooms", e.target.value)} />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="area">Área (m²)</Label>
-                <Input id="area" type="number" min="0" value={formData.area} onChange={(e) => handleInputChange("area", Number.parseInt(e.target.value || '0'))} />
+                <Label htmlFor="area">Área</Label>
+                <Input id="area" value={formData.area} onChange={(e) => handleInputChange("area", e.target.value)} placeholder="0 m²" />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="garageSpaces">Vagas de Garagem</Label>
-                <Input id="garageSpaces" type="number" min="0" value={formData.garageSpaces} onChange={(e) => handleInputChange("garageSpaces", Number.parseInt(e.target.value || '0'))} />
+                <Input id="garageSpaces" type="number" min="0" value={formData.garageSpaces} onChange={(e) => handleNumericInputChange("garageSpaces", e.target.value)} />
             </div>
         </CardContent>
       </Card>
       
-      {/* CARD DE IMAGENS */}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Fotos do Imóvel</CardTitle>
@@ -344,7 +382,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
         </CardContent>
       </Card>
 
-      {/* CARD DE CARACTERÍSTICAS */}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Características Adicionais</CardTitle>
@@ -384,8 +421,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel, isLoading }: Pro
             )}
         </CardContent>
       </Card>
-
-      {/* AÇÕES FINAIS */}
       <div className="flex gap-4 justify-end pt-4">
         <Button type="button" variant="outline" size="lg" onClick={onCancel} disabled={isLoading}>
           Cancelar

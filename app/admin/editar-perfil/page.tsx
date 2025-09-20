@@ -1,20 +1,34 @@
-// app/admin/editar-perfil/page.tsx
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Home, LogOut, User, Link as LinkIcon, Camera, Loader2 } from "lucide-react"
-import Link from "next/link"
+import { User, Link as LinkIcon, Camera, Loader2 } from "lucide-react"
 import { db } from "@/firebase/config"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { AdminNavbar } from "@/components/admin-navbar"
 
-// Interface simplificada, sem as configurações de visibilidade
+const formatPhone = (value: string) => {
+  if (!value) return ""
+  const digitsOnly = value.replace(/\D/g, '')
+  if (digitsOnly.length <= 2) return `(${digitsOnly}`
+  if (digitsOnly.length <= 7) return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2)}`
+  return `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 7)}-${digitsOnly.slice(7, 11)}`
+}
+
+const formatCreci = (value: string) => {
+  if (!value) return ""
+  const cleaned = value.replace(/[^0-9a-zA-Z]/g, '').toUpperCase();
+  if (cleaned.length > 5) {
+    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 6)}`;
+  }
+  return cleaned;
+}
+
 interface BrokerFormData {
     nome: string;
     creci: string;
@@ -26,7 +40,7 @@ interface BrokerFormData {
 }
 
 function EditarPerfilPage() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [formData, setFormData] = useState<BrokerFormData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
@@ -40,7 +54,12 @@ function EditarPerfilPage() {
         const docRef = doc(db, "usuarios", user.uid)
         const docSnap = await getDoc(docRef)
         if (docSnap.exists()) {
-          setFormData(docSnap.data() as BrokerFormData)
+          const data = docSnap.data()
+          setFormData({
+              ...data,
+              phone: data.phone ? formatPhone(data.phone) : '',
+              creci: data.creci ? formatCreci(data.creci) : ''
+          } as BrokerFormData)
         } else {
           console.log("Nenhum documento de usuário encontrado!");
         }
@@ -51,7 +70,13 @@ function EditarPerfilPage() {
   }, [user])
 
   const handleInputChange = (field: keyof BrokerFormData, value: any) => {
-    setFormData(prev => prev ? { ...prev, [field]: value } : null)
+    let formattedValue = value;
+    if (field === 'phone') {
+        formattedValue = formatPhone(value);
+    } else if (field === 'creci') {
+        formattedValue = formatCreci(value);
+    }
+    setFormData(prev => prev ? { ...prev, [field]: formattedValue } : null)
   }
   
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +85,6 @@ function EditarPerfilPage() {
 
     setIsUploading(true)
     
-    // Simulação de upload, substitua pela sua lógica real se necessário
     const reader = new FileReader();
     reader.onloadend = () => {
         handleInputChange('photo', reader.result as string);
@@ -95,25 +119,7 @@ function EditarPerfilPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-secondary text-secondary-foreground shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-2 hover:text-primary transition-colors">
-                <Home className="h-6 w-6" />
-                <span className="text-xl font-bold">GR Imóveis</span>
-              </Link>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary">Admin</Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/admin" className="hover:text-primary transition-colors">Dashboard</Link>
-              <Link href="/admin/imoveis" className="hover:text-primary transition-colors">Imóveis</Link>
-              <span className="text-sm">Olá, {user?.name}</span>
-              <Button variant="outline" size="sm" onClick={logout}><LogOut className="h-4 w-4 mr-2" />Sair</Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminNavbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">

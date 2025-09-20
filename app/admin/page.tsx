@@ -7,13 +7,14 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Home, LogOut, Plus, Building, Eye, DollarSign, Settings, EyeOff, User } from "lucide-react"
+import { Plus, Building, Eye, DollarSign, Settings, EyeOff, User } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/firebase/config";
 import { collection, getDocs, query, limit, orderBy } from "firebase/firestore";
+import { AdminNavbar } from "@/components/admin-navbar";
 
 function AdminDashboard() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const [stats, setStats] = useState({
     total: 0,
     disponiveis: 0,
@@ -95,32 +96,7 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-secondary text-secondary-foreground shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-2 hover:text-primary transition-colors">
-                <Home className="h-6 w-6" />
-                <span className="text-xl font-bold">GR Imóveis</span>
-              </Link>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
-                Admin
-              </Badge>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Link href="/admin/imoveis" className="hover:text-primary transition-colors">
-                Imóveis
-              </Link>
-              <span className="text-sm">Olá, {user?.name}</span>
-              <Button variant="outline" size="sm" onClick={logout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminNavbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">

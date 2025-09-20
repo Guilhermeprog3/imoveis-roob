@@ -1,15 +1,12 @@
-// app/admin/configuracoes/page.tsx
 "use client"
 import { useState, useEffect } from "react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useAuth } from "@/contexts/auth-context"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Home, LogOut, Trash2, Loader2, Shield, Eye } from "lucide-react"
-import Link from "next/link"
+import { Trash2, Loader2, Shield, Eye } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +22,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { db } from "@/firebase/config"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
+import { AdminNavbar } from "@/components/admin-navbar";
 
-// A interface de configurações agora contém apenas isPublic
 interface UserSettings {
     visibility: {
         isPublic: boolean;
@@ -34,7 +31,7 @@ interface UserSettings {
 }
 
 function ConfiguracoesPage() {
-  const { user, logout, updateUserPassword, deactivateCurrentUser, deleteCurrentUser } = useAuth()
+  const { user, updateUserPassword, deactivateCurrentUser, deleteCurrentUser } = useAuth()
   
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -97,7 +94,6 @@ function ConfiguracoesPage() {
       setMessage({ type: 'error', text: result.error || "Ocorreu um erro ao desativar a conta." });
       setActionLoading(false);
     }
-    // O logout e redirecionamento são tratados no AuthProvider
   }
 
   const handleDeleteAccount = async () => {
@@ -114,7 +110,6 @@ function ConfiguracoesPage() {
     }
   }
 
-  // A função de mudança de visibilidade agora altera apenas 'isPublic'
   const handleVisibilityChange = (field: keyof UserSettings['visibility'], value: boolean) => {
     setSettings(prev => {
         if (!prev) return null;
@@ -156,25 +151,7 @@ function ConfiguracoesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-secondary text-secondary-foreground shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-2 hover:text-primary transition-colors">
-                <Home className="h-6 w-6" />
-                <span className="text-xl font-bold">GR Imóveis</span>
-              </Link>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary">Admin</Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/admin" className="hover:text-primary transition-colors">Dashboard</Link>
-              <Link href="/admin/imoveis" className="hover:text-primary transition-colors">Imóveis</Link>
-              <span className="text-sm">Olá, {user?.name}</span>
-              <Button variant="outline" size="sm" onClick={logout}><LogOut className="h-4 w-4 mr-2" />Sair</Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminNavbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">

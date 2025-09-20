@@ -11,14 +11,27 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Home, LogOut, Plus, Search, Edit, Trash2, Eye, Star, Filter, X } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Eye, Star, Filter, X } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/firebase/config";
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import { AdminNavbar } from "@/components/admin-navbar";
+
+const formatCurrencyForFilter = (value: string) => {
+  if (!value) return ""
+  let numberValue = parseInt(value.replace(/[^0-9]/g, ''), 10)
+  if (isNaN(numberValue)) return ""
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numberValue / 100)
+}
+
+const formatAreaForFilter = (value: string) => {
+    if (!value) return ""
+    const numberValue = value.replace(/[^0-9]/g, '')
+    return numberValue ? `${numberValue} m²` : ""
+}
 
 
 function AdminPropertiesPage() {
-  const { user, logout } = useAuth()
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,6 +48,13 @@ function AdminPropertiesPage() {
     area: "",
     sortBy: "newest",
   })
+  
+  const [displayFilters, setDisplayFilters] = useState({
+    minPrice: "",
+    maxPrice: "",
+    area: "",
+  });
+
 
   const [showFilters, setShowFilters] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -56,6 +76,21 @@ function AdminPropertiesPage() {
   const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }))
   }
+  
+  const handleFormattedInputChange = (key: 'minPrice' | 'maxPrice' | 'area', value: string) => {
+    let formattedDisplay = '';
+    let numericValue = value.replace(/[^0-9]/g, '');
+
+    if (key === 'minPrice' || key === 'maxPrice') {
+        formattedDisplay = formatCurrencyForFilter(value);
+    } else if (key === 'area') {
+        formattedDisplay = formatAreaForFilter(value);
+    }
+    
+    setDisplayFilters(prev => ({ ...prev, [key]: formattedDisplay }));
+    handleFilterChange(key, numericValue);
+  };
+
 
   const filteredProperties = useMemo(() => {
     const { searchTerm, status, type, cidade, bairro, minPrice, maxPrice, bedrooms, bathrooms, area, sortBy } = filters
@@ -156,35 +191,12 @@ function AdminPropertiesPage() {
         searchTerm: "", status: "all", type: "all", cidade: "all", bairro: "",
         minPrice: "", maxPrice: "", bedrooms: "", bathrooms: "", area: "", sortBy: "newest"
     })
+    setDisplayFilters({minPrice: "", maxPrice: "", area: ""});
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-secondary text-secondary-foreground shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="flex items-center space-x-2 hover:text-primary transition-colors">
-                <Home className="h-6 w-6" />
-                <span className="text-xl font-bold">GR Imóveis</span>
-              </Link>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
-                Admin
-              </Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/admin" className="hover:text-primary transition-colors">
-                Dashboard
-              </Link>
-              <span className="text-sm">Olá, {user?.name}</span>
-              <Button variant="outline" size="sm" onClick={logout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AdminNavbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -275,11 +287,11 @@ function AdminPropertiesPage() {
                             </SelectContent>
                         </Select>
                         <Input placeholder="Bairro" value={filters.bairro} onChange={(e) => handleFilterChange("bairro", e.target.value)} />
-                        <Input type="number" placeholder="Preço Mín." value={filters.minPrice} onChange={(e) => handleFilterChange("minPrice", e.target.value)} />
-                        <Input type="number" placeholder="Preço Máx." value={filters.maxPrice} onChange={(e) => handleFilterChange("maxPrice", e.target.value)} />
+                        <Input type="text" placeholder="Preço Mín." value={displayFilters.minPrice} onChange={(e) => handleFormattedInputChange("minPrice", e.target.value)} />
+                        <Input type="text" placeholder="Preço Máx." value={displayFilters.maxPrice} onChange={(e) => handleFormattedInputChange("maxPrice", e.target.value)} />
                         <Input type="number" placeholder="Quartos (mín.)" value={filters.bedrooms} onChange={(e) => handleFilterChange("bedrooms", e.target.value)} />
                         <Input type="number" placeholder="Banheiros (mín.)" value={filters.bathrooms} onChange={(e) => handleFilterChange("bathrooms", e.target.value)} />
-                        <Input type="number" placeholder="Área (m² mín.)" value={filters.area} onChange={(e) => handleFilterChange("area", e.target.value)} />
+                        <Input type="text" placeholder="Área (m² mín.)" value={displayFilters.area} onChange={(e) => handleFormattedInputChange("area", e.target.value)} />
                     </div>
                 </CardContent>
             </Card>
