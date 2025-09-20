@@ -1,4 +1,3 @@
-// contexts/auth-context.tsx
 "use client";
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
@@ -38,11 +37,33 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const FIVE_HOURS_IN_MS = 5 * 60 * 60 * 1000;
+const SESSION_TIMESTAMP_KEY = 'session_start_time';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem(SESSION_TIMESTAMP_KEY);
+    } catch (error) {
+      console.error("Erro no logout:", error);
+    }
+  };
+
   useEffect(() => {
+    const sessionTimeout = setInterval(() => {
+      const startTime = localStorage.getItem(SESSION_TIMESTAMP_KEY);
+      if (startTime && user) {
+        if (Date.now() - parseInt(startTime, 10) > FIVE_HOURS_IN_MS) {
+          alert("Sua sessão expirou. Por favor, faça login novamente.");
+          logout();
+        }
+      }
+    }, 60 * 1000);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const userDocRef = doc(db, "usuarios", firebaseUser.uid);
@@ -64,31 +85,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setUser(null);
+        localStorage.removeItem(SESSION_TIMESTAMP_KEY);
       }
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribe();
+      clearInterval(sessionTimeout);
+    };
+  }, [user]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      localStorage.setItem(SESSION_TIMESTAMP_KEY, Date.now().toString());
       return true;
     } catch (error) {
-      console.error("Erro no login:", error);
       return false;
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Erro no logout:", error);
     }
   };
   
@@ -132,13 +149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Reautenticar o usuário é um passo de segurança necessário
       const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
       await reauthenticateWithCredential(currentUser, credential);
-      
-      // Se a reautenticação for bem-sucedida, atualize a senha
       await updatePassword(currentUser, newPassword);
-      
       return { success: true };
     } catch (error: any) {
       console.error("Erro ao atualizar senha:", error);
@@ -158,12 +171,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Nenhum usuário logado." };
     }
     try {
-        // A desativação apenas oculta o perfil, alterando a flag de visibilidade
         const userDocRef = doc(db, "usuarios", currentUser.uid);
         await updateDoc(userDocRef, { "visibility.isPublic": false });
-        
-        // Desloga o usuário após desativar
-        await signOut(auth);
+        await logout();
         
         return { success: true };
     } catch (error: any) {
@@ -182,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userDocRef = doc(db, "usuarios", currentUser.uid);
       await deleteDoc(userDocRef);
       await deleteUser(currentUser);
+      localStorage.removeItem(SESSION_TIMESTAMP_KEY);
       return { success: true };
     } catch (error: any) {
       console.error("Erro ao deletar conta:", error);

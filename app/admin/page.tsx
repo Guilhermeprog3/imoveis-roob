@@ -1,4 +1,3 @@
-// app/admin/page.tsx
 "use client"
 
 import { useEffect, useState } from "react";
@@ -167,14 +166,25 @@ function AdminDashboard() {
                       <div key={property.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <div>
                           <p className="font-medium text-sm">{property.title}</p>
-                          <p className="text-xs text-muted-foreground">{property.price}</p>
+                          {/* PREÇO FORMATADO */}
+                          <p className="text-xs text-muted-foreground">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(property.price || 0)}
+                          </p>
                         </div>
-                        <Badge
-                          variant={property.status === "Disponível" ? "default" : "secondary"}
-                          className={property.status === "Disponível" ? "bg-green-600" : "bg-gray-600"}
-                        >
-                          {property.status}
-                        </Badge>
+                        {/* BOTÃO DE DETALHES ADICIONADO */}
+                        <div className="flex items-center gap-2">
+                            <Badge
+                                variant={property.status === "disponivel" ? "default" : "secondary"}
+                                className={property.status === "disponivel" ? "bg-green-600/80" : "bg-gray-500"}
+                            >
+                                {property.status}
+                            </Badge>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                                <Link href={`/imoveis/${property.id}`} target="_blank" title="Ver detalhes do imóvel">
+                                    <Eye className="h-4 w-4" />
+                                </Link>
+                            </Button>
+                        </div>
                       </div>
                     ))
                 )}

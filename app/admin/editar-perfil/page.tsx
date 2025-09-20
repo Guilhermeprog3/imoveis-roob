@@ -28,7 +28,6 @@ const formatCreci = (value: string) => {
   }
   return cleaned;
 }
-
 interface BrokerFormData {
     nome: string;
     creci: string;
@@ -50,20 +49,24 @@ function EditarPerfilPage() {
   useEffect(() => {
     const fetchBrokerData = async () => {
       if (user) {
-        setIsFetching(true)
-        const docRef = doc(db, "usuarios", user.uid)
-        const docSnap = await getDoc(docRef)
-        if (docSnap.exists()) {
-          const data = docSnap.data()
-          setFormData({
-              ...data,
-              phone: data.phone ? formatPhone(data.phone) : '',
-              creci: data.creci ? formatCreci(data.creci) : ''
-          } as BrokerFormData)
-        } else {
-          console.log("Nenhum documento de usuário encontrado!");
+        try {
+          const docRef = doc(db, "usuarios", user.uid)
+          const docSnap = await getDoc(docRef)
+          if (docSnap.exists()) {
+            const data = docSnap.data()
+            setFormData({
+                ...data,
+                phone: data.phone ? formatPhone(data.phone) : '',
+                creci: data.creci ? formatCreci(data.creci) : ''
+            } as BrokerFormData)
+          } else {
+            console.log("Nenhum documento de usuário encontrado!");
+          }
+        } catch (error) {
+            console.error("Erro ao buscar dados do perfil:", error);
+        } finally {
+            setIsFetching(false);
         }
-        setIsFetching(false)
       }
     }
     fetchBrokerData()

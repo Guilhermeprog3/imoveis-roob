@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Search, Edit, Trash2, Eye, Star, Filter, X } from "lucide-react"
+import { Home, LogOut, Plus, Search, Edit, Trash2, Eye, Star, Filter, X, ChevronLeft, ChevronRight } from "lucide-react" // Ícones adicionados
 import Link from "next/link"
 import { db } from "@/firebase/config";
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "firebase/firestore";
@@ -30,10 +30,13 @@ const formatAreaForFilter = (value: string) => {
     return numberValue ? `${numberValue} m²` : ""
 }
 
-
 function AdminPropertiesPage() {
+  const { user, logout } = useAuth()
   const [properties, setProperties] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const [filters, setFilters] = useState({
     searchTerm: "",
@@ -75,20 +78,29 @@ function AdminPropertiesPage() {
 
   const handleFilterChange = (filterName: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }))
+    setCurrentPage(1);
   }
   
   const handleFormattedInputChange = (key: 'minPrice' | 'maxPrice' | 'area', value: string) => {
     let formattedDisplay = '';
-    let numericValue = value.replace(/[^0-9]/g, '');
+    const rawNumericString = value.replace(/[^0-9]/g, '');
+    let finalNumericValue = rawNumericString;
 
     if (key === 'minPrice' || key === 'maxPrice') {
         formattedDisplay = formatCurrencyForFilter(value);
+        const numberInCents = parseInt(rawNumericString, 10);
+        if (!isNaN(numberInCents)) {
+            finalNumericValue = String(Math.floor(numberInCents / 100));
+        } else {
+            finalNumericValue = "";
+        }
     } else if (key === 'area') {
         formattedDisplay = formatAreaForFilter(value);
+        finalNumericValue = rawNumericString;
     }
     
     setDisplayFilters(prev => ({ ...prev, [key]: formattedDisplay }));
-    handleFilterChange(key, numericValue);
+    handleFilterChange(key, finalNumericValue);
   };
 
 
@@ -96,35 +108,38 @@ function AdminPropertiesPage() {
     const { searchTerm, status, type, cidade, bairro, minPrice, maxPrice, bedrooms, bathrooms, area, sortBy } = filters
     
     let filtered = properties.filter((property) => {
+      const propertyPrice = Number(property.price) || 0;
+      const propertyArea = Number(property.area) || 0;
+      
       const matchesSearch =
-        property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.bairro.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        property.cidade.toLowerCase().includes(searchTerm.toLowerCase())
+        (property.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (property.bairro?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (property.cidade?.toLowerCase() || '').includes(searchTerm.toLowerCase())
       const matchesStatus = status === "all" || property.status === status
-      const matchesType = type === "all" || property.type.toLowerCase() === type
+      const matchesType = type === "all" || (property.type?.toLowerCase() || '') === type
       const matchesCidade = cidade === "all" || property.cidade === cidade
-      const matchesBairro = !bairro || property.bairro.toLowerCase().includes(bairro.toLowerCase())
-      const matchesMinPrice = !minPrice || property.price >= parseInt(minPrice)
-      const matchesMaxPrice = !maxPrice || property.price <= parseInt(maxPrice)
+      const matchesBairro = !bairro || (property.bairro?.toLowerCase() || '').includes(bairro.toLowerCase())
+      const matchesMinPrice = !minPrice || propertyPrice >= parseInt(minPrice)
+      const matchesMaxPrice = !maxPrice || propertyPrice <= parseInt(maxPrice)
       const matchesBedrooms = !bedrooms || property.bedrooms >= parseInt(bedrooms)
       const matchesBathrooms = !bathrooms || property.bathrooms >= parseInt(bathrooms)
-      const matchesArea = !area || property.area >= parseInt(area)
+      const matchesArea = !area || propertyArea >= parseInt(area)
 
       return matchesSearch && matchesStatus && matchesType && matchesCidade && matchesBairro && matchesMinPrice && matchesMaxPrice && matchesBedrooms && matchesBathrooms && matchesArea
     });
 
     switch (sortBy) {
         case "price-low":
-            filtered.sort((a, b) => a.price - b.price);
+            filtered.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
             break;
         case "price-high":
-            filtered.sort((a, b) => b.price - a.price);
+            filtered.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
             break;
         case "area-large":
-            filtered.sort((a, b) => b.area - a.area);
+            filtered.sort((a, b) => (Number(b.area) || 0) - (Number(a.area) || 0));
             break;
         case "area-small":
-            filtered.sort((a, b) => a.area - b.area);
+            filtered.sort((a, b) => (Number(a.area) || 0) - (Number(b.area) || 0));
             break;
         case "newest":
         default:
@@ -135,6 +150,10 @@ function AdminPropertiesPage() {
     return filtered;
 
   }, [properties, filters])
+
+  const totalPages = Math.ceil(filteredProperties.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProperties = filteredProperties.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const featuredCount = properties.filter((property) => property.featured).length
 
@@ -192,6 +211,7 @@ function AdminPropertiesPage() {
         minPrice: "", maxPrice: "", bedrooms: "", bathrooms: "", area: "", sortBy: "newest"
     })
     setDisplayFilters({minPrice: "", maxPrice: "", area: ""});
+    setCurrentPage(1);
   }
 
   return (
@@ -314,7 +334,7 @@ function AdminPropertiesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProperties.map((property) => (
+                  {paginatedProperties.map((property) => (
                     <TableRow key={property.id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
@@ -402,6 +422,24 @@ function AdminPropertiesPage() {
             )}
           </CardContent>
         </Card>
+
+        {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-8">
+            <Button variant="outline" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>
+                <ChevronLeft className="h-4 w-4 mr-2" /> Anterior
+            </Button>
+            <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button key={page} variant={page === currentPage ? "default" : "outline"} size="icon" onClick={() => setCurrentPage(page)}>
+                    {page}
+                </Button>
+                ))}
+            </div>
+            <Button variant="outline" onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages}>
+                Próxima <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+            </div>
+        )}
 
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>

@@ -47,16 +47,21 @@ function ConfiguracoesPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       if (user) {
-        setIsFetching(true);
-        const docRef = doc(db, "usuarios", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setSettings({
-            visibility: data.visibility ? { isPublic: data.visibility.isPublic } : { isPublic: true },
-          });
+        try {
+          const docRef = doc(db, "usuarios", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setSettings({
+              visibility: data.visibility ? { isPublic: data.visibility.isPublic } : { isPublic: true },
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao buscar dados do usuário:", error);
+          setMessage({ type: 'error', text: "Não foi possível carregar as configurações." });
+        } finally {
+          setIsFetching(false);
         }
-        setIsFetching(false);
       }
     };
     fetchUserData();

@@ -51,9 +51,15 @@ function NewPropertyPage() {
       );
 
       const validImageUrls = imageUrls.filter(url => url !== null);
+      
+      const priceAsNumber = data.price ? parseFloat(data.price.replace(/[^0-9,]/g, '').replace(',', '.')) : 0;
+      const areaAsNumber = data.area ? parseInt(data.area.replace(/[^0-9]/g, '')) : 0;
+
 
       await addDoc(collection(db, "imoveis"), {
         ...data,
+        price: priceAsNumber,
+        area: areaAsNumber, 
         images: validImageUrls,
         createdAt: new Date().toISOString(),
       });

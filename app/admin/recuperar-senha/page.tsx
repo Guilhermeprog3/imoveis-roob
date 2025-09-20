@@ -3,27 +3,36 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Home, Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
+  const { sendPasswordReset } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     setIsLoading(true)
 
-    // Simula uma chamada de API para enviar o email
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    
-    // Redireciona para a página de confirmação
-    router.push("/admin/recuperar-senha/confirmacao")
+    const result = await sendPasswordReset(email)
+
+    if (result.success) {
+      router.push("/admin/recuperar-senha/confirmacao")
+    } else {
+      setError(result.error || "Não foi possível enviar o e-mail. Verifique o endereço digitado.")
+    }
+
+    setIsLoading(false)
   }
 
   return (
@@ -45,6 +54,12 @@ export default function ForgotPasswordPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
