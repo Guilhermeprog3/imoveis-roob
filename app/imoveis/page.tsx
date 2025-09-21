@@ -8,12 +8,12 @@ import { PropertyCard } from "@/components/property-card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { db } from "@/firebase/config"
-import { collection, getDocs, query, orderBy } from "firebase/firestore"
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore"
 
 interface PropertyFromDB {
   id: string;
   title: string;
-  price: string;
+  price: number;
   bairro: string;
   cidade: string;
   bedrooms: number;
@@ -47,14 +47,15 @@ export default function ImoveisPage() {
   const [allProperties, setAllProperties] = useState<PropertyFromDB[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filters, setFilters] = useState({
-    search: "",
+    searchTerm: "",
     type: "all",
+    cidade: "all",
+    bairro: "",
     minPrice: "",
     maxPrice: "",
-    location: "all",
-    bedrooms: "any",
-    bathrooms: "any",
-    minArea: "",
+    bedrooms: "",
+    bathrooms: "",
+    area: "",
     sortBy: "newest",
   })
   const [currentPage, setCurrentPage] = useState(1)
@@ -63,14 +64,18 @@ export default function ImoveisPage() {
     const fetchProperties = async () => {
       setIsLoading(true)
       try {
-        const q = query(collection(db, "imoveis"), orderBy("createdAt", "desc"))
+        const q = query(
+            collection(db, "imoveis"), 
+            where("status", "==", "disponivel"), 
+            orderBy("createdAt", "desc")
+        );
         const querySnapshot = await getDocs(q)
         const propertiesData = querySnapshot.docs.map(doc => {
             const data = doc.data();
             return {
                 id: doc.id,
                 title: data.title || "",
-                price: data.price || "0",
+                price: Number(data.price) || 0,
                 bairro: data.bairro || "",
                 cidade: data.cidade || "",
                 bedrooms: data.bedrooms || 0,
@@ -94,60 +99,47 @@ export default function ImoveisPage() {
   }, [])
 
   const filteredProperties = useMemo(() => {
+    const { searchTerm, type, cidade, bairro, minPrice, maxPrice, bedrooms, bathrooms, area, sortBy } = filters
+    
     let filtered = allProperties.filter((property) => {
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase()
-        if (
-          !property.title.toLowerCase().includes(searchTerm) &&
-          !property.bairro.toLowerCase().includes(searchTerm) &&
-          !property.cidade?.toLowerCase().includes(searchTerm)
-        ) {
-          return false
-        }
-      }
-
-      if (filters.type !== "all" && property.type.toLowerCase() !== filters.type) {
-        return false
-      }
-
-      if (filters.location !== "all" && property.cidade?.toLowerCase() !== filters.location.toLowerCase()) {
-        return false
-      }
+      const propertyPrice = property.price || 0;
+      const propertyArea = property.area || 0;
       
-      if (filters.bedrooms !== "any" && property.bedrooms < Number(filters.bedrooms)) {
-        return false
-      }
+      const matchesSearch =
+        (property.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (property.bairro?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (property.cidade?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+      const matchesType = type === "all" || (property.type?.toLowerCase() || '') === type
+      const matchesCidade = cidade === "all" || property.cidade === cidade
+      const matchesBairro = !bairro || (property.bairro?.toLowerCase() || '').includes(bairro.toLowerCase())
+      const matchesMinPrice = !minPrice || propertyPrice >= parseInt(minPrice)
+      const matchesMaxPrice = !maxPrice || propertyPrice <= parseInt(maxPrice)
+      const matchesBedrooms = !bedrooms || property.bedrooms >= parseInt(bedrooms)
+      const matchesBathrooms = !bathrooms || property.bathrooms >= parseInt(bathrooms)
+      const matchesArea = !area || propertyArea >= parseInt(area)
 
-      if (filters.bathrooms !== "any" && property.bathrooms < Number(filters.bathrooms)) {
-        return false
-      }
-
-      if (filters.minPrice || filters.maxPrice) {
-        const priceValue = parseFloat(String(property.price).replace(/[^0-9,-]+/g, "").replace(',', '.')) || 0;
-        if (filters.minPrice && priceValue < Number(filters.minPrice)) return false;
-        if (filters.maxPrice && priceValue > Number(filters.maxPrice)) return false;
-      }
-      
-      if (filters.minArea && property.area < Number(filters.minArea)) {
-        return false
-      }
-
-      return true
-    })
-
-    return filtered.sort((a, b) => {
-        const priceA = parseFloat(String(a.price).replace(/[^0-9,-]+/g, "").replace(',', '.')) || 0;
-        const priceB = parseFloat(String(b.price).replace(/[^0-9,-]+/g, "").replace(',', '.')) || 0;
-
-        switch (filters.sortBy) {
-            case "price-low": return priceA - priceB;
-            case "price-high": return priceB - priceA;
-            case "area-large": return b.area - a.area;
-            case "area-small": return a.area - b.area;
-            case "newest":
-            default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }
+      return matchesSearch && matchesType && matchesCidade && matchesBairro && matchesMinPrice && matchesMaxPrice && matchesBedrooms && matchesBathrooms && matchesArea
     });
+
+    switch (sortBy) {
+        case "price-low":
+            filtered.sort((a, b) => a.price - b.price);
+            break;
+        case "price-high":
+            filtered.sort((a, b) => b.price - a.price);
+            break;
+        case "area-large":
+            filtered.sort((a, b) => b.area - a.area);
+            break;
+        case "area-small":
+            filtered.sort((a, b) => a.area - b.area);
+            break;
+        case "newest":
+        default:
+            filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            break;
+    }
+    return filtered
   }, [allProperties, filters])
 
   const totalPages = Math.ceil(filteredProperties.length / ITEMS_PER_PAGE)
@@ -160,16 +152,20 @@ export default function ImoveisPage() {
   }
   
   const adaptPropertyForCard = (property: PropertyFromDB): PropertyForCard => {
-    let statusForCard: PropertyForCard['status'] = "Vendido";
-    if (property.status === 'disponivel') {
-        statusForCard = property.price.toLowerCase().includes('mês') ? "Para Alugar" : "À Venda";
-    } else if (property.status === 'alugado') {
+    let statusForCard: PropertyForCard['status'] = "À Venda";
+    if (property.status === 'alugado') {
         statusForCard = "Alugado";
     }
 
+    const formattedPrice = new Intl.NumberFormat('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL' 
+    }).format(property.price || 0);
+
     return {
       ...property,
-      location: property.bairro,
+      price: formattedPrice,
+      location: `${property.bairro}, ${property.cidade}`,
       image: property.images?.[0] || '/placeholder.svg',
       status: statusForCard,
     };
@@ -224,8 +220,8 @@ export default function ImoveisPage() {
             <Button
               onClick={() =>
                 handleFilterChange({
-                  search: "", type: "all", minPrice: "", maxPrice: "", location: "all",
-                  bedrooms: "any", bathrooms: "any", minArea: "", sortBy: "newest",
+                  searchTerm: "", type: "all", cidade: "all", bairro: "",
+                  minPrice: "", maxPrice: "", bedrooms: "", bathrooms: "", area: "", sortBy: "newest"
                 })
               }
             >

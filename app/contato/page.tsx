@@ -12,6 +12,23 @@ import { Phone, Mail, Clock, MessageSquare, Send, Award, Facebook, Instagram, Lo
 import { NotificationToast } from "@/components/notification-toast"
 import { db } from "@/firebase/config"
 import { collection, getDocs, query, where } from "firebase/firestore"
+import { Badge } from "@/components/ui/badge"
+
+interface HorarioDia {
+  ativo: boolean;
+  inicio: string;
+  fim: string;
+}
+
+interface HorarioAtendimento {
+  segunda: HorarioDia;
+  terca: HorarioDia;
+  quarta: HorarioDia;
+  quinta: HorarioDia;
+  sexta: HorarioDia;
+  sabado: HorarioDia;
+  domingo: HorarioDia;
+}
 
 interface Broker {
   id: string;
@@ -27,7 +44,18 @@ interface Broker {
   instagram: string;
   facebookUsername: string;
   instagramUsername: string;
+  horarioAtendimento?: HorarioAtendimento;
 }
+
+const diasSemana: { key: keyof HorarioAtendimento; label: string; short: string }[] = [
+    { key: "segunda", label: "Segunda-feira", short: "Seg" },
+    { key: "terca", label: "Terça-feira", short: "Ter" },
+    { key: "quarta", label: "Quarta-feira", short: "Qua" },
+    { key: "quinta", label: "Quinta-feira", short: "Qui" },
+    { key: "sexta", label: "Sexta-feira", short: "Sex" },
+    { key: "sabado", label: "Sábado", short: "Sáb" },
+    { key: "domingo", label: "Domingo", short: "Dom" },
+];
 
 export default function ContatoPage() {
   const [formData, setFormData] = useState({
@@ -88,7 +116,7 @@ export default function ContatoPage() {
       *Mensagem:*
       ${formData.message}
     `
-    const whatsappUrl = `https://wa.me/${selectedBroker.whatsapp}?text=${encodeURIComponent(whatsappMessage)}`
+    const whatsappUrl = `https://wa.me/55${selectedBroker.phone}?text=${encodeURIComponent(whatsappMessage)}`
     window.open(whatsappUrl, "_blank")
 
     setTimeout(() => {
@@ -104,9 +132,65 @@ export default function ContatoPage() {
   const handleWhatsAppContact = () => {
     if (!selectedBroker) return;
     const message = `Olá ${selectedBroker.nome}! Gostaria de mais informações sobre os imóveis disponíveis.`
-    const whatsappUrl = `https://wa.me/${selectedBroker.whatsapp}?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/55${selectedBroker.phone}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
+
+  const renderHorario = () => {
+    if (!selectedBroker?.horarioAtendimento) {
+      return <p className="text-muted-foreground text-sm">Atendimento todos os dias</p>;
+    }
+
+    const horario = selectedBroker.horarioAtendimento;
+    const grupos = [];
+    let grupoAtual: { horario: string; dias: typeof diasSemana } | null = null;
+
+    for (const dia of diasSemana) {
+        const diaInfo = horario[dia.key];
+        if (diaInfo.ativo) {
+            const horarioStr = `${diaInfo.inicio} - ${diaInfo.fim}`;
+            if (grupoAtual && grupoAtual.horario === horarioStr) {
+                grupoAtual.dias.push(dia);
+            } else {
+                if (grupoAtual) grupos.push(grupoAtual);
+                grupoAtual = { horario: horarioStr, dias: [dia] };
+            }
+        } else {
+            if (grupoAtual) {
+                grupos.push(grupoAtual);
+                grupoAtual = null;
+            }
+        }
+    }
+    if (grupoAtual) grupos.push(grupoAtual);
+
+    if (grupos.length === 0) {
+      return <p className="text-muted-foreground text-sm">Consulte os horários de atendimento.</p>;
+    }
+
+    const horarioFormatado = grupos.map(grupo => {
+        let labelDias;
+        if (grupo.dias.length > 2) {
+            labelDias = `${grupo.dias[0].label} a ${grupo.dias[grupo.dias.length - 1].label}`;
+        } else if (grupo.dias.length > 1) {
+            labelDias = grupo.dias.map(d => d.label).join(' e ');
+        } else {
+            labelDias = grupo.dias[0].label;
+        }
+        return { label: labelDias, horario: grupo.horario };
+    });
+
+    return (
+        <div className="space-y-1">
+            {horarioFormatado.map((item, index) => (
+                <div key={index} className="flex justify-between text-sm items-center">
+                    <span className="text-muted-foreground">{item.label}:</span>
+                    <Badge variant="outline" className="font-mono font-medium text-secondary bg-transparent">{item.horario}</Badge>
+                </div>
+            ))}
+        </div>
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -130,7 +214,7 @@ export default function ContatoPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto">
               {brokers.map((broker) => (
                 <Card
                   key={broker.id}
@@ -150,19 +234,21 @@ export default function ContatoPage() {
                       />
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-secondary mb-1">{broker.nome}</h3>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Award className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-medium text-primary">{broker.creci}</span>
-                        </div>
+                        {broker.creci && (
+                            <div className="flex items-center gap-2 mb-2">
+                            <Award className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-medium text-primary">{broker.creci}</span>
+                            </div>
+                        )}
                         {broker.specialties && <p className="text-sm text-muted-foreground mb-1">{broker.specialties.join(' & ')}</p>}
                         {broker.experience && <p className="text-sm text-muted-foreground">{broker.experience}</p>}
-                        <div className="flex items-center gap-4 mt-3 text-sm">
-                          <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3 text-primary" />
+                        <div className="flex flex-col items-start gap-2 mt-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-primary" />
                             <span className="text-muted-foreground">{broker.phone}</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Mail className="h-3 w-3 text-primary" />
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-primary" />
                             <span className="text-muted-foreground">{broker.email}</span>
                           </div>
                         </div>
@@ -192,35 +278,47 @@ export default function ContatoPage() {
                       <div className="p-3 bg-primary/10 rounded-lg"><Phone className="h-6 w-6 text-primary" /></div>
                       <div>
                           <h3 className="font-semibold text-secondary mb-1">Telefone</h3>
-                          <p className="text-muted-foreground">{selectedBroker.phone}</p>
+                          <a href={`tel:${selectedBroker.phone.replace(/\D/g, '')}`} className="text-muted-foreground hover:text-primary transition-colors">
+                            {selectedBroker.phone}
+                          </a>
                       </div>
                   </div>
                    <div className="flex items-start gap-4">
                       <div className="p-3 bg-primary/10 rounded-lg"><Mail className="h-6 w-6 text-primary" /></div>
                       <div>
                           <h3 className="font-semibold text-secondary mb-1">E-mail</h3>
-                          <p className="text-muted-foreground">{selectedBroker.email}</p>
+                          <a href={`mailto:${selectedBroker.email}`} className="text-muted-foreground hover:text-primary transition-colors">
+                            {selectedBroker.email}
+                          </a>
                       </div>
                   </div>
-                  <div className="flex items-start gap-4">
-                      <div className="p-3 bg-primary/10 rounded-lg"><Facebook className="h-6 w-6 text-primary" /></div>
-                      <div>
-                          <h3 className="font-semibold text-secondary mb-1">Facebook</h3>
-                          <a href={selectedBroker.facebook} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">{selectedBroker.facebookUsername}</a>
-                      </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                      <div className="p-3 bg-primary/10 rounded-lg"><Instagram className="h-6 w-6 text-primary" /></div>
-                      <div>
-                          <h3 className="font-semibold text-secondary mb-1">Instagram</h3>
-                          <a href={selectedBroker.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">{selectedBroker.instagramUsername}</a>
-                      </div>
-                  </div>
+                  {selectedBroker.facebookUsername && (
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-primary/10 rounded-lg"><Facebook className="h-6 w-6 text-primary" /></div>
+                        <div>
+                            <h3 className="font-semibold text-secondary mb-1">Facebook</h3>
+                            <a href={`https://www.facebook.com/${selectedBroker.facebookUsername}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                                {selectedBroker.facebookUsername}
+                            </a>
+                        </div>
+                    </div>
+                  )}
+                  {selectedBroker.instagramUsername && (
+                    <div className="flex items-start gap-4">
+                        <div className="p-3 bg-primary/10 rounded-lg"><Instagram className="h-6 w-6 text-primary" /></div>
+                        <div>
+                            <h3 className="font-semibold text-secondary mb-1">Instagram</h3>
+                            <a href={`https://www.instagram.com/${selectedBroker.instagramUsername}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                                {selectedBroker.instagramUsername}
+                            </a>
+                        </div>
+                    </div>
+                  )}
                   <div className="flex items-start gap-4">
                       <div className="p-3 bg-primary/10 rounded-lg"><Clock className="h-6 w-6 text-primary" /></div>
                       <div>
                           <h3 className="font-semibold text-secondary mb-1">Horário de Funcionamento</h3>
-                          <p className="text-muted-foreground">Atendimento todos os dias</p>
+                          {renderHorario()}
                       </div>
                   </div>
                 </CardContent>

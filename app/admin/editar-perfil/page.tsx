@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { User, Link as LinkIcon, Camera, Loader2 } from "lucide-react"
+import { User, Link as LinkIcon, Camera, Loader2, Clock } from "lucide-react"
 import { db } from "@/firebase/config"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { AdminNavbar } from "@/components/admin-navbar"
 import { NotificationToast } from "@/components/notification-toast"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Separator } from "@/components/ui/separator"
 
 const formatPhone = (value: string) => {
   if (!value) return ""
@@ -30,6 +32,22 @@ const formatCreci = (value: string) => {
   return cleaned;
 }
 
+interface HorarioDia {
+  ativo: boolean;
+  inicio: string;
+  fim: string;
+}
+
+interface HorarioAtendimento {
+  segunda: HorarioDia;
+  terca: HorarioDia;
+  quarta: HorarioDia;
+  quinta: HorarioDia;
+  sexta: HorarioDia;
+  sabado: HorarioDia;
+  domingo: HorarioDia;
+}
+
 interface BrokerFormData {
     nome: string;
     creci: string;
@@ -38,7 +56,29 @@ interface BrokerFormData {
     photo: string;
     facebookUsername: string;
     instagramUsername: string;
+    horarioAtendimento: HorarioAtendimento;
 }
+
+const defaultHorario: HorarioAtendimento = {
+  segunda: { ativo: true, inicio: "08:00", fim: "18:00" },
+  terca: { ativo: true, inicio: "08:00", fim: "18:00" },
+  quarta: { ativo: true, inicio: "08:00", fim: "18:00" },
+  quinta: { ativo: true, inicio: "08:00", fim: "18:00" },
+  sexta: { ativo: true, inicio: "08:00", fim: "18:00" },
+  sabado: { ativo: false, inicio: "09:00", fim: "12:00" },
+  domingo: { ativo: false, inicio: "09:00", fim: "12:00" },
+};
+
+const diasSemana: { key: keyof HorarioAtendimento; label: string }[] = [
+    { key: "segunda", label: "Segunda-feira" },
+    { key: "terca", label: "Terça-feira" },
+    { key: "quarta", label: "Quarta-feira" },
+    { key: "quinta", label: "Quinta-feira" },
+    { key: "sexta", label: "Sexta-feira" },
+    { key: "sabado", label: "Sábado" },
+    { key: "domingo", label: "Domingo" },
+];
+
 
 function EditarPerfilPage() {
   const { user } = useAuth()
@@ -46,7 +86,7 @@ function EditarPerfilPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [message, setMessage] = useState<{type: 'success' | 'error' | 'info', text: string} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
@@ -62,7 +102,8 @@ function EditarPerfilPage() {
                 setFormData({
                     ...data,
                     phone: data.phone ? formatPhone(data.phone) : '',
-                    creci: data.creci ? formatCreci(data.creci) : ''
+                    creci: data.creci ? formatCreci(data.creci) : '',
+                    horarioAtendimento: data.horarioAtendimento ? { ...defaultHorario, ...data.horarioAtendimento } : defaultHorario,
                 } as BrokerFormData)
               } else {
                 console.log("Nenhum documento de usuário encontrado!");
@@ -90,20 +131,69 @@ function EditarPerfilPage() {
     }
     setFormData(prev => prev ? { ...prev, [field]: formattedValue } : null)
   }
+
+  const handleHorarioChange = (dia: keyof HorarioAtendimento, campo: keyof HorarioDia, valor: string | boolean) => {
+    setFormData(prev => {
+        if (!prev) return null;
+        return {
+            ...prev,
+            horarioAtendimento: {
+                ...prev.horarioAtendimento!,
+                [dia]: {
+                    ...prev.horarioAtendimento![dia],
+                    [campo]: valor
+                }
+            }
+        };
+    });
+  };
   
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setIsUploading(true)
-    
+    setIsUploading(true);
+    setMessage(null);
+
     const reader = new FileReader();
-    reader.onloadend = () => {
-        handleInputChange('photo', reader.result as string);
-        setIsUploading(false);
-    };
     reader.readAsDataURL(file);
-  }
+    reader.onloadend = async () => {
+      const base64Image = reader.result as string;
+
+      try {
+        const formDataCloudinary = new FormData();
+        formDataCloudinary.append('file', base64Image);
+        formDataCloudinary.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: 'POST',
+            body: formDataCloudinary,
+          }
+        );
+
+        const result = await response.json();
+
+        if (result.secure_url) {
+          handleInputChange('photo', result.secure_url);
+          setMessage({ type: 'info', text: "Imagem carregada. Clique em 'Salvar Alterações' para confirmar." });
+        } else {
+          throw new Error(result.error?.message || 'Falha no upload da imagem.');
+        }
+      } catch (error) {
+        console.error("Erro no upload para o Cloudinary:", error);
+        setMessage({ type: 'error', text: "Não foi possível carregar a imagem. Tente novamente." });
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    reader.onerror = () => {
+      console.error("Erro ao ler o arquivo.");
+      setMessage({ type: 'error', text: "Erro ao processar o arquivo de imagem." });
+      setIsUploading(false);
+    };
+  };
 
   const handleSaveChanges = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -153,10 +243,9 @@ function EditarPerfilPage() {
           <p className="text-muted-foreground">Gerencie suas informações pessoais e de contato.</p>
         </div>
 
-
         <form onSubmit={handleSaveChanges}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 flex flex-col gap-8">
               <Card>
                 <CardHeader className="text-center"><CardTitle>Foto de Perfil</CardTitle></CardHeader>
                 <CardContent className="flex flex-col items-center gap-4">
@@ -183,6 +272,49 @@ function EditarPerfilPage() {
                     </Button>
                   </div>
                    <p className="text-sm text-muted-foreground text-center">Clique na câmera para alterar sua foto.</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5 text-primary" /> Horário de Atendimento</CardTitle>
+                  <CardDescription>Defina os dias e horários que você está disponível.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {diasSemana.map(({ key, label }) => (
+                    <div key={key}>
+                      <div className="grid grid-cols-3 items-center gap-4">
+                        <div className="flex items-center gap-3 col-span-1">
+                            <Checkbox 
+                                id={`ativo-${key}`} 
+                                checked={formData.horarioAtendimento[key].ativo} 
+                                onCheckedChange={(checked) => handleHorarioChange(key, 'ativo', !!checked)}
+                            />
+                            <Label htmlFor={`ativo-${key}`} className="font-medium">{label}</Label>
+                        </div>
+                        <div className="flex items-center gap-2 col-span-2">
+                            <Input 
+                                type="time" 
+                                id={`inicio-${key}`}
+                                value={formData.horarioAtendimento[key].inicio}
+                                onChange={(e) => handleHorarioChange(key, 'inicio', e.target.value)}
+                                disabled={!formData.horarioAtendimento[key].ativo}
+                                className="w-full"
+                            />
+                            <span className="text-muted-foreground">às</span>
+                            <Input 
+                                type="time" 
+                                id={`fim-${key}`}
+                                value={formData.horarioAtendimento[key].fim}
+                                onChange={(e) => handleHorarioChange(key, 'fim', e.target.value)}
+                                disabled={!formData.horarioAtendimento[key].ativo}
+                                className="w-full"
+                            />
+                        </div>
+                      </div>
+                      {key !== 'domingo' && <Separator className="mt-4" />}
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </div>

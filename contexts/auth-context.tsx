@@ -53,17 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Efeito para lidar com o estado de autenticação do Firebase
   useEffect(() => {
-    const sessionTimeout = setInterval(() => {
-      const startTime = localStorage.getItem(SESSION_TIMESTAMP_KEY);
-      if (startTime && user) {
-        if (Date.now() - parseInt(startTime, 10) > FIVE_HOURS_IN_MS) {
-          alert("Sua sessão expirou. Por favor, faça login novamente.");
-          logout();
-        }
-      }
-    }, 60 * 1000);
-
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const userDocRef = doc(db, "usuarios", firebaseUser.uid);
@@ -90,10 +81,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
-    return () => {
-      unsubscribe();
-      clearInterval(sessionTimeout);
-    };
+    // Limpa a inscrição ao desmontar
+    return () => unsubscribe();
+  }, []); // O array de dependências vazio garante que isso rode apenas uma vez
+
+  // Efeito para lidar com o timeout da sessão
+  useEffect(() => {
+    if (user) {
+      const sessionTimeout = setInterval(() => {
+        const startTime = localStorage.getItem(SESSION_TIMESTAMP_KEY);
+        if (startTime) {
+          if (Date.now() - parseInt(startTime, 10) > FIVE_HOURS_IN_MS) {
+            alert("Sua sessão expirou. Por favor, faça login novamente.");
+            logout();
+          }
+        }
+      }, 60 * 1000);
+
+      return () => clearInterval(sessionTimeout);
+    }
   }, [user]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -117,6 +123,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "usuarios", newUser.uid), {
         nome: name,
         email: email,
+        creci: "",
+        phone: "",
+        whatsapp: "",
+        photo: "/placeholder-user.jpg",
+        facebook: "",
+        instagram: "",
+        facebookUsername: "",
+        instagramUsername: "",
+        specialties: [],
+        experience: "",
+        visibility: {
+          isPublic: false
+        }
       });
 
       return { success: true };
@@ -192,6 +211,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const userDocRef = doc(db, "usuarios", currentUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        const photoURL = userData.photo;
+
+        if (photoURL && photoURL.includes('cloudinary')) {
+          const publicIdWithFormat = photoURL.split('/').pop();
+          const publicId = publicIdWithFormat?.split('.')[0];
+          
+          if (publicId) {
+            try {
+              await fetch('/api/delete-image', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicId }),
+              });
+            } catch (apiError) {
+              console.error('Erro ao chamar a API para deletar a imagem:', apiError);
+            }
+          }
+        }
+      }
+
       await deleteDoc(userDocRef);
       await deleteUser(currentUser);
       localStorage.removeItem(SESSION_TIMESTAMP_KEY);

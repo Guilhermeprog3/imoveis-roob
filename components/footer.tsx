@@ -45,9 +45,9 @@ export function Footer() {
   return (
     <footer className="bg-secondary text-secondary-foreground">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-8">
           
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-4 lg:col-span-2 md:col-span-4">
             <div className="flex items-center space-x-2">
               <Home className="h-8 w-8 text-primary" />
               <span className="text-xl font-bold">GR Imóveis</span>
@@ -67,21 +67,11 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Serviços</h3>
-            <ul className="space-y-2">
-              <li className="text-secondary-foreground/80">Compra de Imóveis</li>
-              <li className="text-secondary-foreground/80">Venda de Imóveis</li>
-              <li className="text-secondary-foreground/80">Locação</li>
-              <li className="text-secondary-foreground/80">Avaliação</li>
-            </ul>
-          </div>
-
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3 md:col-span-4">
             <h3 className="text-lg font-semibold mb-4">Contato</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {isLoading ? (
-                <div className="flex items-center justify-center sm:col-span-2">
+                <div className="flex items-center justify-center md:col-span-3">
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
               ) : (
@@ -91,18 +81,18 @@ export function Footer() {
                     <div className="space-y-2 mt-2">
                       <div className="flex items-center space-x-2">
                         <Phone className="h-4 w-4 text-primary" />
-                        <a href={`https://wa.me/${broker.whatsapp}`} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground/80 hover:text-primary">
+                        <a href={`https://wa.me/55${broker.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground/80 hover:text-primary">
                           {broker.phone}
                         </a>
                       </div>
                       {broker.facebookUsername && (
-                        <a href={broker.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
+                        <a href={`https://www.facebook.com/${broker.facebookUsername}`} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
                           <Facebook className="h-4 w-4" />
                           <span>{broker.facebookUsername}</span>
                         </a>
                       )}
                       {broker.instagramUsername && (
-                        <a href={broker.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
+                        <a href={`https://www.instagram.com/${broker.instagramUsername}`} target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-sm text-secondary-foreground/80 hover:text-primary transition-colors">
                           <Instagram className="h-4 w-4" />
                           <span>{broker.instagramUsername}</span>
                         </a>
@@ -116,7 +106,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-secondary-foreground/20 mt-8 pt-8 text-center">
-          <p className="text-secondary-foreground/60">© 2024 GR Imóveis. Todos os direitos reservados.</p>
+          <p className="text-secondary-foreground/60">© 2025 GR Imóveis. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>

@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Building, Eye, DollarSign, Settings, EyeOff, User } from "lucide-react"
+import { Plus, Building, Eye, DollarSign, Settings, EyeOff, User, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/firebase/config";
 import { collection, getDocs, query, limit, orderBy } from "firebase/firestore";
@@ -137,6 +137,12 @@ function AdminDashboard() {
                   Gerenciar Imóveis
                 </Link>
               </Button>
+              <Button variant="outline" className="w-full justify-start bg-transparent" size="lg" asChild>
+                <Link href="/criar-admin">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Criar Administrador
+                </Link>
+              </Button>
                <Button variant="outline" className="w-full justify-start bg-transparent" size="lg" asChild>
                 <Link href="/admin/editar-perfil">
                     <User className="h-4 w-4 mr-2" />
@@ -166,12 +172,10 @@ function AdminDashboard() {
                       <div key={property.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <div>
                           <p className="font-medium text-sm">{property.title}</p>
-                          {/* PREÇO FORMATADO */}
                           <p className="text-xs text-muted-foreground">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(property.price || 0)}
                           </p>
                         </div>
-                        {/* BOTÃO DE DETALHES ADICIONADO */}
                         <div className="flex items-center gap-2">
                             <Badge
                                 variant={property.status === "disponivel" ? "default" : "secondary"}

@@ -49,30 +49,28 @@ function ConfiguracoesPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user) {
-        setIsFetching(false);
-        return;
-      }
-      
-      try {
-        const docRef = doc(db, "usuarios", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setSettings({
-            visibility: data.visibility ? { isPublic: data.visibility.isPublic } : { isPublic: true },
-          });
+    if (user) {
+      const fetchUserData = async () => {
+        setIsFetching(true);
+        try {
+          const docRef = doc(db, "usuarios", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const isPublic = data.visibility?.isPublic === true;
+            setSettings({ visibility: { isPublic } });
+          } else {
+            setSettings({ visibility: { isPublic: false } });
+          }
+        } catch (error) {
+          console.error("Erro ao carregar configurações:", error);
+          setMessage({ type: 'error', text: "Não foi possível carregar as configurações." });
+        } finally {
+          setIsFetching(false);
         }
-      } catch (error) {
-        console.error("Erro ao carregar configurações:", error);
-        setMessage({ type: 'error', text: "Não foi possível carregar as configurações." });
-      } finally {
-        setIsFetching(false);
-      }
-    };
-    
-    fetchUserData();
+      };
+      fetchUserData();
+    }
   }, [user]);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -125,36 +123,25 @@ function ConfiguracoesPage() {
     }
   }
 
-  const handleVisibilityChange = (field: keyof UserSettings['visibility'], value: boolean) => {
-    setSettings(prev => {
-        if (!prev) return null;
-        return {
-            ...prev,
-            visibility: {
-                ...prev.visibility,
-                [field]: value,
-            }
-        };
-    });
-  };
+  const handleVisibilityChange = async (isPublic: boolean) => {
+    if (!user) {
+      setMessage({ type: 'error', text: "Usuário não autenticado." });
+      return;
+    }
 
-  const handleSaveChanges = async () => {
-      if (!user || !settings) return;
-      setActionLoading(true);
-      setMessage(null);
-      try {
-          const userDocRef = doc(db, "usuarios", user.uid);
-          await updateDoc(userDocRef, {
-              visibility: settings.visibility,
-          });
-          setMessage({ type: 'success', text: "Configurações salvas com sucesso!" });
-      } catch (error) {
-          setMessage({ type: 'error', text: "Erro ao salvar as configurações." });
-          console.error(error);
-      } finally {
-          setActionLoading(false);
-      }
-  }
+    setSettings({ visibility: { isPublic } }); // Atualiza a UI imediatamente
+    setMessage(null);
+
+    try {
+      const userDocRef = doc(db, "usuarios", user.uid);
+      await updateDoc(userDocRef, { "visibility.isPublic": isPublic });
+      setMessage({ type: 'success', text: `Perfil definido como ${isPublic ? 'público' : 'privado'}.` });
+    } catch (error) {
+      setMessage({ type: 'error', text: "Erro ao atualizar a visibilidade." });
+      console.error(error);
+      setSettings({ visibility: { isPublic: !isPublic } }); // Reverte a UI em caso de erro
+    }
+  };
 
   if (isFetching) {
     return (
@@ -177,15 +164,9 @@ function ConfiguracoesPage() {
       )}
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-secondary mb-2">Configurações</h1>
-            <p className="text-muted-foreground">Gerencie as configurações da sua conta.</p>
-          </div>
-          <Button onClick={handleSaveChanges} disabled={actionLoading}>
-            {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Salvar Alterações
-          </Button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-secondary mb-2">Configurações</h1>
+          <p className="text-muted-foreground">Gerencie as configurações da sua conta.</p>
         </div>
 
         <div className="max-w-3xl mx-auto space-y-8">
@@ -242,7 +223,7 @@ function ConfiguracoesPage() {
                             <Label htmlFor="isPublic" className="font-medium">Perfil público</Label>
                             <p className="text-sm text-muted-foreground">Seu perfil aparece nas buscas, contato e mapa.</p>
                         </div>
-                        <Switch id="isPublic" checked={settings?.visibility.isPublic} onCheckedChange={(checked) => handleVisibilityChange("isPublic", checked)} />
+                        <Switch id="isPublic" checked={settings?.visibility.isPublic ?? false} onCheckedChange={handleVisibilityChange} />
                     </div>
                 </CardContent>
             </Card>
