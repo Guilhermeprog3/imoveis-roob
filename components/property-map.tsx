@@ -54,7 +54,6 @@ export function PropertyMap({ address, lat = -23.5505, lng = -46.6333 }: Propert
           <p className="text-xs text-muted-foreground mt-2 opacity-75">Clique para abrir no Google Maps</p>
         </div>
 
-        {/* Animated background elements */}
         <div className="absolute top-10 left-10 w-16 h-16 bg-primary/10 rounded-full animate-float"></div>
         <div
           className="absolute bottom-10 right-10 w-12 h-12 bg-accent/10 rounded-full animate-float"

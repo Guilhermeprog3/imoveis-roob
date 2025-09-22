@@ -4,17 +4,14 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color palette with sophisticated yellow and blue theme */
   --background: #ffffff;
   --foreground: #374151;
   --card: #fefce8;
   --card-foreground: #374151;
   --popover: #fefce8;
   --popover-foreground: #374151;
-  /* Changed primary from #d97706 to lighter yellow #fbbf24 */
   --primary: #fbbf24;
   --primary-foreground: #0f172a;
-  /* Changed secondary from #3b82f6 to much darker navy blue #0f172a */
   --secondary: #0f172a;
   --secondary-foreground: #ffffff;
   --muted: #fefce8;
@@ -34,17 +31,12 @@
   --radius: 0.5rem;
   --sidebar: #ffffff;
   --sidebar-foreground: #374151;
-  /* Updated sidebar primary to much darker navy blue #0f172a */
   --sidebar-primary: #0f172a;
   --sidebar-primary-foreground: #ffffff;
-  /* Updated sidebar accent to lighter yellow #fbbf24 */
   --sidebar-accent: #fbbf24;
   --sidebar-accent-foreground: #0f172a;
   --sidebar-border: #e5e7eb;
-  /* Updated sidebar ring to use much darker navy blue */
   --sidebar-ring: rgba(15, 23, 42, 0.5);
-
-  /* Added specific colors for navbar and footer - lighter blue */
   --navbar-bg: #1e3a8a;
   --navbar-foreground: #ffffff;
   --footer-bg: #1e3a8a;
@@ -52,7 +44,6 @@
 }
 
 .dark {
-  /* Updated dark mode colors with sophisticated palette */
   --background: #0f172a;
   --foreground: #f8fafc;
   --card: #1e293b;
@@ -61,7 +52,6 @@
   --popover-foreground: #f8fafc;
   --primary: #fbbf24;
   --primary-foreground: #0f172a;
-  /* Updated dark mode secondary to much darker navy blue #0f172a */
   --secondary: #0f172a;
   --secondary-foreground: #ffffff;
   --muted: #334155;
@@ -81,23 +71,18 @@
   --radius: 0.5rem;
   --sidebar: #1e293b;
   --sidebar-foreground: #f8fafc;
-  /* Updated dark mode sidebar primary to much darker navy blue #0f172a */
   --sidebar-primary: #0f172a;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #fbbf24;
   --sidebar-accent-foreground: #0f172a;
   --sidebar-border: #334155;
-  /* Updated dark mode sidebar ring to use much darker navy blue */
   --sidebar-ring: rgba(15, 23, 42, 0.5);
-
-  /* Added dark mode colors for navbar and footer - lighter blue */
   --navbar-bg: #1e3a8a;
   --navbar-foreground: #ffffff;
   --footer-bg: #1e3a8a;
   --footer-foreground: #ffffff;
 }
 
-/* Added custom animations and unique visual effects */
 @keyframes float {
   0%,
   100% {
@@ -120,11 +105,9 @@
 @keyframes pulse-glow {
   0%,
   100% {
-    /* Updated pulse glow to use lighter yellow #fbbf24 */
     box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
   }
   50% {
-    /* Updated pulse glow to use lighter yellow #fbbf24 */
     box-shadow: 0 0 40px rgba(251, 191, 36, 0.6);
   }
 }
@@ -143,9 +126,7 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Added unique gradient backgrounds */
 .gradient-hero {
-  /* Updated gradient to use much darker navy blue #0f172a */
   background: linear-gradient(135deg, #0f172a 0%, #0f172a 25%, #fbbf24 75%, #f59e0b 100%);
 }
 
@@ -198,8 +179,6 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-
-  /* Added navbar and footer color tokens */
   --color-navbar-bg: var(--navbar-bg);
   --color-navbar-foreground: var(--navbar-foreground);
   --color-footer-bg: var(--footer-bg);

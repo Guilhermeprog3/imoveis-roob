@@ -20,7 +20,6 @@ export function HeroSection() {
         ></div>
       </div>
 
-      {/* Background Pattern */}
       <div className="absolute inset-0 bg-[url('/modern-city-skyline-silhouette.png')] bg-cover bg-center opacity-15"></div>
 
       <div className="container mx-auto px-4 relative z-10">

@@ -26,7 +26,6 @@ export function Header() {
             <Link href="/imoveis" className="hover:text-primary transition-colors">
               Imóveis
             </Link>
-            {/* LINHA ADICIONADA ABAIXO */}
             <Link href="/sobre" className="hover:text-primary transition-colors">
               Sobre
             </Link>
@@ -52,13 +51,11 @@ export function Header() {
             )}
           </nav>
 
-          {/* Mobile Menu Button */}
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
 
-        {/* Mobile Navigation */}
         {isMenuOpen && (
           <nav className="md:hidden py-4 border-t border-secondary-foreground/20">
             <div className="flex flex-col space-y-4">
@@ -72,7 +69,6 @@ export function Header() {
               >
                 Imóveis
               </Link>
-               {/* LINHA ADICIONADA ABAIXO */}
               <Link
                 href="/sobre"
                 className="hover:text-primary transition-colors"

@@ -1,4 +1,3 @@
-// app/admin/login/page.tsx
 "use client"
 
 import type React from "react"
@@ -45,13 +44,12 @@ export default function LoginPage() {
   }
 
   if (user) {
-    return null // Will redirect
+    return null
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary via-secondary/90 to-accent flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2 text-white hover:text-primary transition-colors">
             <Home className="h-8 w-8" />

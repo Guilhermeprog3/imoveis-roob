@@ -129,7 +129,7 @@ function ConfiguracoesPage() {
       return;
     }
 
-    setSettings({ visibility: { isPublic } }); // Atualiza a UI imediatamente
+    setSettings({ visibility: { isPublic } });
     setMessage(null);
 
     try {

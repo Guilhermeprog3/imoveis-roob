@@ -53,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Efeito para lidar com o estado de autenticação do Firebase
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
@@ -81,11 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
-    // Limpa a inscrição ao desmontar
     return () => unsubscribe();
-  }, []); // O array de dependências vazio garante que isso rode apenas uma vez
-
-  // Efeito para lidar com o timeout da sessão
+  }, []);
   useEffect(() => {
     if (user) {
       const sessionTimeout = setInterval(() => {

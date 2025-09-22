@@ -24,7 +24,6 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
   return (
     <div className="space-y-4">
-      {/* Main Image */}
       <div className="relative aspect-video bg-muted rounded-lg overflow-hidden group">
         <img
           src={images[currentImage] || "/placeholder.svg?height=600&width=800"}
@@ -32,7 +31,6 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
           className="w-full h-full object-cover"
         />
 
-        {/* Navigation Arrows */}
         {images.length > 1 && (
           <>
             <Button
@@ -54,7 +52,6 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
           </>
         )}
 
-        {/* Fullscreen Button */}
         <Dialog open={isFullscreen} onOpenChange={setIsFullscreen}>
           <DialogTrigger asChild>
             <Button
@@ -66,12 +63,10 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-7xl w-full h-full max-h-screen p-0">
-             {/* INÍCIO DA CORREÇÃO DE ACESSIBILIDADE */}
             <DialogHeader className="sr-only">
               <DialogTitle>{title}</DialogTitle>
               <DialogDescription>Imagem do imóvel em tela cheia. Foto {currentImage + 1} de {images.length}.</DialogDescription>
             </DialogHeader>
-            {/* FIM DA CORREÇÃO DE ACESSIBILIDADE */}
 
             <div className="relative w-full h-full bg-black">
               <img
@@ -80,7 +75,6 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                 className="w-full h-full object-contain"
               />
 
-              {/* Fullscreen Navigation */}
               {images.length > 1 && (
                 <>
                   <Button
@@ -111,7 +105,6 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                 <X className="h-4 w-4" />
               </Button>
 
-              {/* Image Counter */}
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded">
                 {currentImage + 1} / {images.length}
               </div>
@@ -119,13 +112,11 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
           </DialogContent>
         </Dialog>
 
-        {/* Image Counter */}
         <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded text-sm">
           {currentImage + 1} / {images.length}
         </div>
       </div>
 
-      {/* Thumbnail Strip */}
       {images.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-2">
           {images.map((image, index) => (
