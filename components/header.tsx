@@ -26,6 +26,10 @@ export function Header() {
             <Link href="/imoveis" className="hover:text-primary transition-colors">
               Imóveis
             </Link>
+            {/* LINHA ADICIONADA ABAIXO */}
+            <Link href="/sobre" className="hover:text-primary transition-colors">
+              Sobre
+            </Link>
             <Link href="/contato" className="hover:text-primary transition-colors">
               Contato
             </Link>
@@ -67,6 +71,14 @@ export function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Imóveis
+              </Link>
+               {/* LINHA ADICIONADA ABAIXO */}
+              <Link
+                href="/sobre"
+                className="hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sobre
               </Link>
               <Link
                 href="/contato"

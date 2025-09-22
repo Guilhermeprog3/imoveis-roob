@@ -1,13 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { MapPin, Bed, Bath, Square, Star, Loader2 } from "lucide-react"
+import { Star, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/firebase/config"
 import { collection, query, where, getDocs, limit } from "firebase/firestore"
+import { PropertyCard } from "./property-card"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 interface Property {
   id: string;
@@ -17,9 +23,11 @@ interface Property {
   bedrooms: number;
   bathrooms: number;
   area: number;
-  status: "À Venda" | "Para Alugar";
+  status: "À Venda" | "Para Alugar" | "Vendido" | "Alugado";
   images: string[];
   featured: boolean;
+  type: string;
+  image: string;
 }
 
 export function FeaturedProperties() {
@@ -31,13 +39,27 @@ export function FeaturedProperties() {
       setIsLoading(true)
       try {
         const propertiesRef = collection(db, "imoveis")
-        const q = query(propertiesRef, where("featured", "==", true), limit(3))
+        const q = query(propertiesRef, where("featured", "==", true), limit(6))
         
         const querySnapshot = await getDocs(q)
-        const propertiesData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as Property))
+        const propertiesData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const price = data.price ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.price) : "Consulte";
+            return {
+              id: doc.id,
+              title: data.title || "",
+              price: price,
+              location: `${data.bairro || ''}, ${data.cidade || ''}`,
+              bedrooms: data.bedrooms || 0,
+              bathrooms: data.bathrooms || 0,
+              area: data.area || 0,
+              status: data.status === 'disponivel' ? 'À Venda' : 'Vendido',
+              images: data.images || [],
+              image: data.images?.[0] || "/placeholder.svg",
+              featured: data.featured || false,
+              type: data.type || ""
+            } as Property;
+        });
         
         setFeaturedProperties(propertiesData)
       } catch (error) {
@@ -51,7 +73,7 @@ export function FeaturedProperties() {
   }, [])
 
   return (
-    <section className="py-20 bg-slate-50">
+    <section className="py-24 bg-slate-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6">
@@ -77,79 +99,25 @@ export function FeaturedProperties() {
                 <p className="text-lg text-muted-foreground">Nenhum imóvel em destaque no momento.</p>
             </div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-              {featuredProperties.map((property, index) => (
-                <Card
-                  key={property.id}
-                  className={`overflow-hidden transition-all duration-300 group bg-card border hover:shadow-xl hover:-translate-y-2 ${index === 0 && featuredProperties.length > 1 ? "lg:col-span-2" : ""}`}
-                >
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={property.images?.[0] || "/placeholder.svg"}
-                      alt={property.title}
-                      className={`w-full object-cover group-hover:scale-110 transition-transform duration-700 ${
-                        index === 0 && featuredProperties.length > 1 ? "h-80" : "h-64"
-                      }`}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                    <div className="absolute top-4 left-4">
-                      <Badge
-                        variant={property.status === "À Venda" ? "default" : "secondary"}
-                        className={`${property.status === "À Venda" ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground"} shadow-lg`}
-                      >
-                        {property.status}
-                      </Badge>
-                    </div>
-
-                    {property.featured && (
-                      <div className="absolute bottom-4 left-4">
-                        <Badge className="bg-secondary text-secondary-foreground shadow-lg">
-                          <Star className="h-3 w-3 mr-1" />
-                          Destaque
-                        </Badge>
-                      </div>
-                    )}
+          <Carousel
+            opts={{
+              align: "start",
+              loop: featuredProperties.length > 3,
+            }}
+            className="w-full mb-16"
+          >
+            <CarouselContent className="-ml-4">
+              {featuredProperties.map((property) => (
+                <CarouselItem key={property.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                  <div className="h-full">
+                    <PropertyCard property={property} />
                   </div>
-                  
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-2 text-secondary group-hover:text-primary transition-colors duration-300">
-                      {property.title}
-                    </h3>
-
-                    <div className="flex items-center text-muted-foreground mb-4 text-sm">
-                      <MapPin className="h-4 w-4 mr-2 text-primary" />
-                      <span>{property.location}</span>
-                    </div>
-
-                    <div className="flex items-center justify-around mb-4 text-muted-foreground border-t border-b py-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Bed className="h-4 w-4 mr-2" />
-                        <span className="font-medium">{property.bedrooms}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Bath className="h-4 w-4 mr-2" />
-                        <span className="font-medium">{property.bathrooms}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Square className="h-4 w-4 mr-2" />
-                        <span className="font-medium">{property.area}m²</span>
-                      </div>
-                    </div>
-                    <div className="text-2xl font-bold text-primary">{property.price}</div>
-                  </CardContent>
-
-                  <CardFooter className="p-6 pt-0">
-                    <Button
-                      asChild
-                      className="w-full h-12 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <Link href={`/imoveis/${property.id}`}>Ver Detalhes Completos</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
+                </CarouselItem>
               ))}
-            </div>
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-[-20px] top-1/2 -translate-y-1/2 hidden sm:flex" />
+            <CarouselNext className="absolute right-[-20px] top-1/2 -translate-y-1/2 hidden sm:flex" />
+          </Carousel>
         )}
 
         <div className="text-center">

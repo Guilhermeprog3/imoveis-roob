@@ -61,16 +61,18 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <>
-      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 group gradient-card border-0">
+      <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 group gradient-card border-0 h-full flex flex-col">
         <div className="relative overflow-hidden">
-          <img
-            src={property.image || "/placeholder.svg?height=250&width=400"}
-            alt={property.title}
-            className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <Link href={`/imoveis/${property.id}`} className="block">
+            <img
+              src={property.image || "/placeholder.svg?height=250&width=400"}
+              alt={property.title}
+              className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-700"
+            />
+          </Link>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
 
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 flex gap-2">
             <Badge
               variant={property.status === "À Venda" ? "default" : "secondary"}
               className={
@@ -83,50 +85,47 @@ export function PropertyCard({ property }: PropertyCardProps) {
             >
               {property.status}
             </Badge>
+             {property.featured && (
+                <Badge className="bg-secondary text-secondary-foreground shadow-lg">Destaque</Badge>
+            )}
           </div>
+          
+          <button
+            onClick={handleShare}
+            className="absolute top-4 right-4 p-2 bg-white/90 rounded-full hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl opacity-0 group-hover:opacity-100"
+            title="Compartilhar"
+          >
+            <Share2 className="h-4 w-4 text-muted-foreground hover:text-primary" />
+          </button>
 
-          {property.featured && (
-            <div className="absolute top-4 right-16">
-              <Badge className="bg-accent text-white shadow-lg">Destaque</Badge>
+           <div className="absolute bottom-4 left-4">
+              <h3 className="text-xl font-bold text-white mb-1 drop-shadow-lg">{property.title}</h3>
+              <div className="flex items-center text-white/90 text-sm">
+                <MapPin className="h-4 w-4 mr-2" />
+                <span className="line-clamp-1">{property.location}</span>
+              </div>
             </div>
-          )}
-
-          <div className="absolute top-4 right-4 flex gap-2">
-            <button
-              onClick={handleShare}
-              className="p-2 bg-white/90 rounded-full hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl"
-              title="Compartilhar"
-            >
-              <Share2 className="h-4 w-4 text-muted-foreground hover:text-primary" />
-            </button>
-          </div>
         </div>
 
-        <CardContent className="p-6">
-          <h3 className="text-xl font-bold mb-3 text-secondary group-hover:text-primary transition-colors duration-300 line-clamp-2">
-            {property.title}
-          </h3>
-          <div className="flex items-center text-muted-foreground mb-4">
-            <MapPin className="h-4 w-4 mr-2 text-primary flex-shrink-0" />
-            <span className="text-sm line-clamp-1">{property.location}</span>
-          </div>
-
-          <div className="flex items-center justify-between mb-4 text-muted-foreground">
-            <div className="flex items-center bg-muted/50 px-3 py-2 rounded-lg">
-              <Bed className="h-4 w-4 mr-2" />
+        <CardContent className="p-6 flex-grow">
+          <div className="flex items-center justify-between mb-4 text-muted-foreground border-b pb-4">
+            <div className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-primary" />
               <span className="font-medium">{property.bedrooms}</span>
+              <span className="hidden sm:inline">Quartos</span>
             </div>
-            <div className="flex items-center bg-muted/50 px-3 py-2 rounded-lg">
-              <Bath className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2">
+              <Bath className="h-5 w-5 text-primary" />
               <span className="font-medium">{property.bathrooms}</span>
+               <span className="hidden sm:inline">Banheiros</span>
             </div>
-            <div className="flex items-center bg-muted/50 px-3 py-2 rounded-lg">
-              <Square className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2">
+              <Square className="h-5 w-5 text-primary" />
               <span className="font-medium">{property.area}m²</span>
             </div>
           </div>
 
-          <div className="text-2xl font-bold text-primary mb-4">{property.price}</div>
+          <div className="text-3xl font-bold text-primary mb-4">{property.price}</div>
         </CardContent>
 
         <CardFooter className="p-6 pt-0 flex gap-3">
